@@ -162,6 +162,10 @@
   <div class="tab-panel" data-panel="manage">
     <input type="text" class="search-box" id="manage-search" placeholder="🔍 Rechercher un craft..." />
     <div id="manage-list"></div>
+    <div id="trash-wrap" style="margin-top:1.5rem; display:none;">
+      <button class="btn btn-secondary" id="toggle-trash" style="font-size:0.85rem;">🗑️ Voir la corbeille (<span id="trash-count">0</span>)</button>
+      <div id="trash-list" style="display:none; margin-top:1rem;"></div>
+    </div>
   </div>
 
   <!-- TAB: Categories -->
@@ -372,62 +376,79 @@ async function renderManage() {
   await reloadAllCrafts();
   const q = (document.getElementById('manage-search').value || '').trim().toLowerCase();
   const deleted = getDeletedIds();
-  const filtered = allCraftsCache.filter(c =>
+
+  const active = allCraftsCache.filter(c => !deleted.has(c.id));
+  const trashed = allCraftsCache.filter(c => deleted.has(c.id));
+
+  const filtered = active.filter(c =>
     !q || c.name.toLowerCase().includes(q) || (c.categoryName || '').toLowerCase().includes(q)
   );
 
-  const groups = {};
-  for (const c of filtered) (groups[c.category] ||= []).push(c);
-
+  // Main list
   const list = document.getElementById('manage-list');
   list.innerHTML = '';
-
   if (!filtered.length) {
     list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:2rem;">Aucun craft trouvé.</p>';
-    return;
-  }
-
-  for (const slug of Object.keys(groups).sort()) {
-    const meta = catMeta(slug);
-    const header = document.createElement('div');
-    header.className = 'cat-group-head';
-    header.textContent = `${meta.icon || '📦'} ${groups[slug][0].categoryName || slug} · ${groups[slug].length}`;
-    list.appendChild(header);
-
-    for (const c of groups[slug]) {
-      const isDeleted = deleted.has(c.id);
-      const row = document.createElement('div');
-      row.className = 'manage-row';
-      row.style.opacity = isDeleted ? '0.55' : '1';
-      row.innerHTML = `
-        <div class="manage-row-info">
-          <strong>${escapeHTML(c.name)}</strong>
-          <span>${(c.ingredients || []).length} ingrédient(s) · id: <code>${escapeHTML(c.id)}</code></span>
-        </div>
-        <div style="display:flex; gap:0.5rem; align-items:center;">
-          <span class="chip-badge ${isDeleted ? 'chip-deleted' : (c.source === 'user' ? 'chip-user' : 'chip-wiki')}">
-            ${isDeleted ? 'supprimé' : (c.source || 'wiki')}
-          </span>
-          ${isDeleted
-            ? `<button class="btn-restore" data-restore="${escapeAttr(c.id)}">↺ Restaurer</button>`
-            : `<button class="btn-danger" data-delete="${escapeAttr(c.id)}">✕ Supprimer</button>`
-          }
-        </div>
-      `;
-      list.appendChild(row);
+  } else {
+    const groups = {};
+    for (const c of filtered) (groups[c.category] ||= []).push(c);
+    for (const slug of Object.keys(groups).sort()) {
+      const meta = catMeta(slug);
+      const header = document.createElement('div');
+      header.className = 'cat-group-head';
+      header.textContent = `${meta.icon || '📦'} ${groups[slug][0].categoryName || slug} · ${groups[slug].length}`;
+      list.appendChild(header);
+      for (const c of groups[slug]) list.appendChild(renderManageRow(c, false));
     }
   }
 
-  list.querySelectorAll('[data-delete]').forEach(btn => {
+  // Trash
+  const trashWrap = document.getElementById('trash-wrap');
+  const trashList = document.getElementById('trash-list');
+  const trashCount = document.getElementById('trash-count');
+  if (trashed.length === 0) {
+    trashWrap.style.display = 'none';
+  } else {
+    trashWrap.style.display = '';
+    trashCount.textContent = trashed.length;
+    trashList.innerHTML = '';
+    for (const c of trashed) trashList.appendChild(renderManageRow(c, true));
+  }
+
+  attachManageHandlers();
+}
+
+function renderManageRow(c, isDeleted) {
+  const row = document.createElement('div');
+  row.className = 'manage-row';
+  if (isDeleted) row.style.opacity = '0.55';
+  row.innerHTML = `
+    <div class="manage-row-info">
+      <strong>${escapeHTML(c.name)}</strong>
+      <span>${(c.ingredients || []).length} ingrédient(s) · id: <code>${escapeHTML(c.id)}</code></span>
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <span class="chip-badge ${isDeleted ? 'chip-deleted' : (c.source === 'user' ? 'chip-user' : 'chip-wiki')}">
+        ${isDeleted ? 'supprimé' : (c.source || 'wiki')}
+      </span>
+      ${isDeleted
+        ? `<button class="btn-restore" data-restore="${escapeAttr(c.id)}">↺ Restaurer</button>`
+        : `<button class="btn-danger" data-delete="${escapeAttr(c.id)}">✕ Supprimer</button>`
+      }
+    </div>
+  `;
+  return row;
+}
+
+function attachManageHandlers() {
+  document.querySelectorAll('[data-delete]').forEach(btn => {
     btn.onclick = () => {
       const id = btn.dataset.delete;
       const craft = allCraftsCache.find(c => c.id === id);
-      if (!confirm(`Supprimer « ${craft?.name || id} » ?\n\nIl disparaîtra du site. Exporte crafts.json pour rendre la suppression permanente.`)) return;
+      if (!confirm(`Supprimer « ${craft?.name || id} » ?\n\nIl disparaîtra de la liste. Exporte crafts.json pour rendre la suppression permanente.`)) return;
       if (craft?.source === 'user') {
-        // Remove from local storage directly
         lsSet(LS.LOCAL, lsGet(LS.LOCAL, []).filter(c => c.id !== id));
       } else {
-        // Add to deleted overrides
         const del = lsGet(LS.DELETED, []);
         if (!del.includes(id)) del.push(id);
         lsSet(LS.DELETED, del);
@@ -437,7 +458,7 @@ async function renderManage() {
     };
   });
 
-  list.querySelectorAll('[data-restore]').forEach(btn => {
+  document.querySelectorAll('[data-restore]').forEach(btn => {
     btn.onclick = () => {
       const id = btn.dataset.restore;
       lsSet(LS.DELETED, lsGet(LS.DELETED, []).filter(x => x !== id));
@@ -446,6 +467,16 @@ async function renderManage() {
     };
   });
 }
+
+document.getElementById('toggle-trash').onclick = () => {
+  const list = document.getElementById('trash-list');
+  const btn = document.getElementById('toggle-trash');
+  const shown = list.style.display !== 'none';
+  list.style.display = shown ? 'none' : '';
+  btn.innerHTML = shown
+    ? '🗑️ Voir la corbeille (<span id="trash-count">' + document.querySelectorAll('#trash-list .manage-row').length + '</span>)'
+    : '▲ Masquer la corbeille';
+};
 
 document.getElementById('manage-search').addEventListener('input', () => {
   if (document.querySelector('.tab-panel.active').dataset.panel === 'manage') renderManage();
