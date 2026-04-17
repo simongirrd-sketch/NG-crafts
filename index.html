@@ -21,7 +21,9 @@
     <div class="nav-links">
       <a class="nav-link active" href="index.html">Accueil</a>
       <a class="nav-link" href="crafts.html">Crafts</a>
-      <a class="nav-link" href="admin.html" data-admin-only>Ajouter</a>
+      <a class="nav-link" href="admin.html" data-admin-only>Admin</a>
+      <button class="nav-link" data-guest-only onclick="openLoginModal()">Connexion</button>
+      <button class="nav-link" data-admin-only onclick="logout()">Déconnexion</button>
     </div>
   </div>
 </nav>
