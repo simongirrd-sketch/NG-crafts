@@ -1,0 +1,15 @@
+>
+
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Parchemins</span></h2>
+<h2 style="text-align:center;">'''Parchemin de Craft'''</h2>
+
+<center>[[Fichier:Parchemin_1.png|200px|none|left]]Il permet de crafter des armes de catégorie: <u style="font-style:inherit;font-weight:inherit;">Rare</u> Une fois le Parchemin en votre possession, il vous suffit de l'ouvrir pour découvrir le Craft. Réunissez alors toutes les ressources necessaires, placez les dans un établie en y incluant le Parchemin et vous obtiendrez l'arme.
+</center>
+
+<p style="text-align:center;">''Note: Lorsque le Craft inclue une arme, celle-ci doit être au maximum de sa durabilité pour que le Craft puisse fonctionner.''</p>
+<h2 style="text-align:center;">'''Parchemin d'Amélioration'''</h2>
+
+<center>[[Fichier:Parchemin_2.png|200px|none|left]]Il permet d'améliorer des armes.
+</center>
+
+<p style="text-align:center;">Il existe plusieurs types d'améliorations, celles-ci vous permettent d'améliorer votre arme en y rajoutant par exemple des clous ou du fil barbelé. Une fois le Parchemin en votre possession, placez votre arme (la durabilité doit être au maximum) dans un établie avec les ressources nécessaires à l'amélioration et y ajoutant le Parchemin.</p>

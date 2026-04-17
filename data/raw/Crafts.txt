@@ -1,0 +1,77 @@
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Crafts Principaux</span></h2>
+<center>
+=='''Table de Craft + (Établi)'''==
+
+[[Fichier:Craft.png]]
+
+♦ 8 x Planche de Bois
+
+♦ 1 x Table de Craft
+=='''Manche d'Outils'''==
+
+[[Fichier:Manche.png]]
+
+♦ 3 x Stick
+</center>
+
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Améliorations</span></h2>
+<center>
+=='''Cordelettes'''==
+
+[[Fichier:Screenshot_85.png|none|250px|left]]
+♦ 2 x Fils d'araignée
+
+=='''Écrous'''==
+
+[[Fichier:Screenshot_86.png|none|250px|left]]
+
+♦ 4 x Lingot de Fer
+=='''Clous'''==
+
+[[Fichier:Screenshot_87.png|none|250px|left]]
+
+♦ 1 x Lingot de Fer
+=='''Fils Barbelés'''==
+
+[[Fichier:Screenshot_88.png|none|250px|left]]
+
+♦ 1 x Lingot de Fer
+
+♦ 3 x Cordelette
+
+♦ 5 x Clou
+</center>
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Crafts Usuels</span></h2>
+<center>
+=='''Plaque de Bois'''==
+
+[[Fichier:Red63m6nlkphbccnmohmk8bd6k3h5_1393623950.5811animation3_250_lent.gif|350px]]
+
+♦ 9 x Planche (quelconque)
+
+=='''Lame Courbe'''==
+
+[[Fichier:Screenshot_93.png|none|350px|left]]
+
+♦ 4 x Lingot de Fer
+=='''Lame de Couteau'''==
+
+[[Fichier:Screenshot_94.png|none|350px|left]]
+
+♦ 4 x Lingot de Fer
+=='''Lame de Hache'''==
+
+[[Fichier:Screenshot_95.png|none|350px|left]]
+
+♦ 7 x Lingot de Fer
+=='''Lame de Katana'''==
+
+[[Fichier:Screenshot_96.png|none|350px|left]]
+
+♦ 5 x Lingot de Fer
+=='''Lame de Machette'''==
+
+[[Fichier:Screenshot_97.png|none|350px|left]]♦ 6 x Lingot de Fer
+
+
+</center>

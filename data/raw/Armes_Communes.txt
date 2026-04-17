@@ -1,0 +1,77 @@
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Armes Communes</span></h2>
+
+
+<center>
+=='''Hache Commune'''==
+
+[[Fichier:Screenshot_1.png|300px|none|left|Sticks, Cordelettes, Lame de Hache]]
+♦ 3 x Stick
+
+♦ 2 x Cordelette
+
+♦ 1 x Tête de Hache 
+
+=='''Pied de Biche'''==
+
+[[Fichier:Screenshot_2.png|300px|none|left]]
+♦ 8 x Lingot de Fer
+
+=='''Tuyau'''==
+
+[[Fichier:Screenshot_3.png|300px|none|left|]]
+♦ 6 x Lingot de Fer
+=='''Clé Anglaise'''==
+
+[[Fichier:Screenshot_4.png|300px|none|left]]
+♦ 7 x Lingot de Fer
+
+♦ 1 x Écrou
+=='''Clé Anglaise Renforcée'''==
+
+[[Fichier:Screenshot_5.png|300px|none|left]]
+♦ 5 x Éecrou
+
+♦ 1 x Clé Anglaise (durabilité au MAX)
+
+=='''Pagaie'''==
+
+[[Fichier:Screenshot_7.png|300px|none|left]]
+♦ 2 x Plaque de Bois
+
+♦ 2 x Manche d'Outils
+=='''Fauscille'''==
+
+[[Fichier:Screenshot_8.png|300px|none|left]]
+♦ 1 x Lame Courbe
+
+♦ 1 x Cordelette
+
+♦ 2 x Manche d'Outils
+=='''Masse'''==
+
+[[Fichier:Screenshot_10.png|300px|none|left]]
+♦ 4 x Clou
+
+♦ 2 x Plaque de Bois
+
+♦ 2 x Manche d'Outils
+
+♦ 2 x Cordelette
+=='''Couteau fait maison'''==
+
+[[Fichier:Screenshot_27.png|300px|none|left]]
+♦ 1 x Lame de Couteau
+
+♦ 1 x Manche d'Outils
+=='''Couteau Commun'''==
+
+[[Fichier:Screenshot_28.png|300px|none|left]]
+♦ 1 x Couteau Fait-maison
+
+♦ 2 x Lingot de Fer
+=='''Batte de Baseball Commune'''==
+
+[[Fichier:Screenshot_29.png|300px|none|left]]♦ 5 x Plaque de Bois
+
+♦ 1 x Manche d'Outils
+</center>

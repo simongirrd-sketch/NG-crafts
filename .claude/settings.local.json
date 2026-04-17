@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(npm install *)",
+      "Bash(pip3 --version)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:21st.dev)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:wiki.nationsglory.fr)",
+      "WebFetch(domain:nationsglory.fr)",
+      "WebSearch",
+      "WebFetch(domain:nationsglory-dark.fandom.com)",
+      "WebFetch(domain:nationglory.fandom.com)",
+      "Bash(git --version)",
+      "Bash(git -C \"C:/Users/simon/OneDrive/Desktop/Site Nationsglory\" config user.name)",
+      "Bash(git -C \"C:/Users/simon/OneDrive/Desktop/Site Nationsglory\" config user.email)",
+      "Bash(where gh *)",
+      "Bash(where winget *)"
+    ]
+  }
+}

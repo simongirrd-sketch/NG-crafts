@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NG Crafts — Wiki des crafts NationsGlory</title>
+<meta name="description" content="Base de données complète des crafts NationsGlory avec recherche, filtres et ajouts personnalisés." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">⛏️</span>
+      <span>NG Crafts</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link active" href="index.html">Accueil</a>
+      <a class="nav-link" href="crafts.html">Crafts</a>
+      <a class="nav-link" href="admin.html">Ajouter</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    <span id="live-count">Chargement…</span>
+  </div>
+  <h1>Tous les crafts<br>NationsGlory au même endroit</h1>
+  <p>Recettes, ingrédients, catégories — scrapé depuis le wiki officiel et enrichi par la communauté.</p>
+  <div class="hero-actions">
+    <a href="crafts.html" class="btn btn-primary">Explorer les crafts →</a>
+    <a href="admin.html" class="btn btn-secondary">+ Ajouter un craft</a>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="section-head">
+    <div>
+      <h2>Catégories</h2>
+      <p>Parcourez par type d'item</p>
+    </div>
+  </div>
+  <div class="grid" id="cat-grid"></div>
+</section>
+
+<section class="section container">
+  <div class="section-head">
+    <div>
+      <h2>Crafts récents</h2>
+      <p>Les dernières recettes ajoutées</p>
+    </div>
+    <a href="crafts.html" class="nav-link">Tout voir →</a>
+  </div>
+  <div class="grid" id="recent-grid"></div>
+</section>
+
+<footer>
+  <p>Données: <a href="https://nationsglory-dark.fandom.com/fr/wiki/Crafts" target="_blank" rel="noopener">wiki NationsGlory Dark</a> · Projet communautaire non-officiel</p>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script>
+(async () => {
+  try {
+    const crafts = await loadCrafts();
+    document.getElementById('live-count').textContent = `${crafts.length} crafts disponibles`;
+
+    const byCat = {};
+    for (const c of crafts) {
+      (byCat[c.category] ||= []).push(c);
+    }
+
+    const catGrid = document.getElementById('cat-grid');
+    const order = Object.keys(byCat).sort((a, b) => byCat[b].length - byCat[a].length);
+    for (const slug of order) {
+      const meta = catMeta(slug);
+      const name = byCat[slug][0].categoryName || slug;
+      const card = document.createElement('a');
+      card.href = `crafts.html?cat=${encodeURIComponent(slug)}`;
+      card.className = 'cat-card';
+      card.style.setProperty('--cat-color', meta.color);
+      card.innerHTML = `
+        <div class="cat-icon">${meta.icon}</div>
+        <h3>${escapeHTML(name)}</h3>
+        <p>${escapeHTML(meta.desc)}</p>
+        <span class="cat-count">${byCat[slug].length} crafts</span>
+      `;
+      catGrid.appendChild(card);
+    }
+
+    const recent = [...crafts].reverse().slice(0, 8);
+    const recentGrid = document.getElementById('recent-grid');
+    for (const c of recent) {
+      recentGrid.appendChild(renderCraftCard(c));
+    }
+  } catch (e) {
+    document.getElementById('live-count').textContent = 'Erreur de chargement';
+    console.error(e);
+  }
+})();
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function renderCraftCard(c) {
+  const meta = catMeta(c.category);
+  const a = document.createElement('a');
+  a.className = 'craft-card';
+  a.href = `craft.html?id=${encodeURIComponent(c.id)}`;
+  a.innerHTML = `
+    ${c.source === 'user' ? '<span class="badge-user">user</span>' : ''}
+    <div class="craft-card-head">
+      <div class="craft-icon" style="color:${meta.color}">${meta.icon}</div>
+      <div>
+        <div class="craft-cat">${escapeHTML(c.categoryName || c.category)}</div>
+        <h4>${escapeHTML(c.name)}</h4>
+      </div>
+    </div>
+    <div class="ingredients">
+      ${(c.ingredients || []).slice(0, 4).map(i =>
+        `<span class="ingredient"><span class="qty">${i.qty}×</span>${escapeHTML(i.name)}</span>`
+      ).join('')}
+      ${(c.ingredients || []).length > 4 ? `<span class="ingredient">+${c.ingredients.length - 4}</span>` : ''}
+    </div>
+  `;
+  return a;
+}
+</script>
+</body>
+</html>

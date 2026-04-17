@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Crafts — NG Crafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">⛏️</span>
+      <span>NG Crafts</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">Accueil</a>
+      <a class="nav-link active" href="crafts.html">Crafts</a>
+      <a class="nav-link" href="admin.html">Ajouter</a>
+    </div>
+  </div>
+</nav>
+
+<section class="container" style="padding-top: 3rem;">
+  <div class="section-head">
+    <div>
+      <h2>Tous les crafts</h2>
+      <p id="result-count">Chargement…</p>
+    </div>
+  </div>
+
+  <div class="search-wrap" style="margin: 0 0 1.5rem 0; max-width: 100%;">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" class="search" id="search" placeholder="Rechercher un craft ou un ingrédient..." autocomplete="off" />
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="grid" id="crafts-grid"></div>
+
+  <div class="empty" id="empty" style="display:none;">
+    <div class="empty-icon">🔍</div>
+    <p>Aucun craft ne correspond à ta recherche.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Données: <a href="https://nationsglory-dark.fandom.com/fr/wiki/Crafts" target="_blank" rel="noopener">wiki NationsGlory Dark</a></p>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script>
+let allCrafts = [];
+let activeCategory = new URLSearchParams(location.search).get('cat') || 'all';
+let searchQuery = '';
+
+(async () => {
+  try {
+    allCrafts = await loadCrafts();
+    renderFilters();
+    render();
+  } catch (e) {
+    document.getElementById('result-count').textContent = 'Erreur de chargement';
+    console.error(e);
+  }
+})();
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function renderFilters() {
+  const container = document.getElementById('filters');
+  const byCat = {};
+  for (const c of allCrafts) (byCat[c.category] ||= []).push(c);
+
+  const cats = [['all', 'Tous', allCrafts.length], ...Object.keys(byCat).map(s => [s, byCat[s][0].categoryName || s, byCat[s].length])];
+
+  container.innerHTML = '';
+  for (const [slug, name, count] of cats) {
+    const btn = document.createElement('button');
+    btn.className = 'chip' + (slug === activeCategory ? ' active' : '');
+    btn.innerHTML = `${escapeHTML(name)} <span class="chip-count">${count}</span>`;
+    btn.onclick = () => {
+      activeCategory = slug;
+      const url = new URL(location.href);
+      if (slug === 'all') url.searchParams.delete('cat');
+      else url.searchParams.set('cat', slug);
+      history.replaceState(null, '', url);
+      renderFilters();
+      render();
+    };
+    container.appendChild(btn);
+  }
+}
+
+function render() {
+  const grid = document.getElementById('crafts-grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('result-count');
+  const q = searchQuery.trim().toLowerCase();
+
+  let filtered = allCrafts;
+  if (activeCategory !== 'all') filtered = filtered.filter(c => c.category === activeCategory);
+  if (q) {
+    filtered = filtered.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      (c.ingredients || []).some(i => i.name.toLowerCase().includes(q))
+    );
+  }
+
+  count.textContent = `${filtered.length} craft${filtered.length > 1 ? 's' : ''}${q ? ` pour « ${q} »` : ''}`;
+  grid.innerHTML = '';
+  if (filtered.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  for (const c of filtered) grid.appendChild(renderCraftCard(c));
+}
+
+function renderCraftCard(c) {
+  const meta = catMeta(c.category);
+  const a = document.createElement('a');
+  a.className = 'craft-card';
+  a.href = `craft.html?id=${encodeURIComponent(c.id)}`;
+  a.innerHTML = `
+    ${c.source === 'user' ? '<span class="badge-user">user</span>' : ''}
+    <div class="craft-card-head">
+      <div class="craft-icon" style="color:${meta.color}">${meta.icon}</div>
+      <div>
+        <div class="craft-cat">${escapeHTML(c.categoryName || c.category)}</div>
+        <h4>${escapeHTML(c.name)}</h4>
+      </div>
+    </div>
+    <div class="ingredients">
+      ${(c.ingredients || []).slice(0, 4).map(i =>
+        `<span class="ingredient"><span class="qty">${i.qty}×</span>${escapeHTML(i.name)}</span>`
+      ).join('')}
+      ${(c.ingredients || []).length > 4 ? `<span class="ingredient">+${c.ingredients.length - 4}</span>` : ''}
+    </div>
+  `;
+  return a;
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  render();
+});
+</script>
+</body>
+</html>

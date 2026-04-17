@@ -1,0 +1,42 @@
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Armes Peu Communes</span></h2>
+<center>
+=='''Marteau à Clous'''==
+
+[[Fichier:Screenshot_50.png|300px|none|left]]
+♦ 1 x Tête de Marteau
+
+♦ 2 x Plaque de Fer
+
+♦ 3 x Manche d'Outils
+
+♦ 1 x Clou
+
+=='''Batte de Baseball [Non Commune]'''==
+
+[[Fichier:Screenshot_51.png|300px|none|left]]
+♦ 6 x Plaque de Bois
+
+♦ 2 x Cordelette
+
+♦ 2 x Manche d'Outils
+
+=='''Batte de Baseball en Métal'''==
+
+[[Fichier:Screenshot_52.png|300px|none|left|]]
+♦ 6 x Plaque d'Acier
+
+♦ 2 x Manche d'Outils
+
+♦ 2 x Cordelette
+=='''Couteau Militaire'''==
+
+[[Fichier:Screenshot_53.png|300px|none|left]]♦ 1 x Lame de Couteau
+
+♦ 2 x Plaque de Fer
+
+♦ 1 x Cordelette
+
+♦ 1 x Manche d'Outils
+
+
+</center>

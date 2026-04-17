@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ajouter un craft — NG Crafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">⛏️</span>
+      <span>NG Crafts</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">Accueil</a>
+      <a class="nav-link" href="crafts.html">Crafts</a>
+      <a class="nav-link active" href="admin.html">Ajouter</a>
+    </div>
+  </div>
+</nav>
+
+<section class="container" style="padding: 3rem 1.5rem;">
+  <div class="section-head" style="justify-content:flex-start; flex-direction:column; align-items:flex-start;">
+    <h2>Ajouter un craft</h2>
+    <p style="color:var(--text-muted)">Crée un craft, teste-le localement, puis exporte le JSON à coller dans <code>data/crafts.json</code>.</p>
+  </div>
+
+  <div class="form">
+    <div class="form-group">
+      <label for="name">Nom du craft *</label>
+      <input type="text" id="name" placeholder="Ex: Épée du Dragon" required />
+    </div>
+
+    <div class="form-group">
+      <label for="category">Catégorie *</label>
+      <select id="category">
+        <option value="crafts-de-base">Crafts de base</option>
+        <option value="armes-communes">Armes Communes</option>
+        <option value="armes-peu-communes">Armes Peu Communes</option>
+        <option value="armures">Armures</option>
+        <option value="outils">Outils</option>
+        <option value="minerais">Minerais</option>
+        <option value="parchemins">Parchemins</option>
+        <option value="personnalise">Personnalisé</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Ingrédients *</label>
+      <div id="ingredients"></div>
+      <button type="button" class="btn-add" id="add-ing">+ Ajouter un ingrédient</button>
+    </div>
+
+    <div class="form-group">
+      <label for="image">Image (optionnel, nom de fichier ou URL)</label>
+      <input type="text" id="image" placeholder="Ex: sword.png" />
+    </div>
+
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top: 1.5rem;">
+      <button type="button" class="btn btn-primary" id="save-local">💾 Sauvegarder localement</button>
+      <button type="button" class="btn btn-secondary" id="export-json">📋 Copier JSON</button>
+      <button type="button" class="btn btn-secondary" id="reset-local">🗑️ Effacer locaux</button>
+    </div>
+
+    <div class="form-group" style="margin-top:1.5rem;">
+      <label>JSON généré (à coller dans <code>data/crafts.json</code>)</label>
+      <pre class="output" id="output">{ }</pre>
+    </div>
+  </div>
+
+  <div style="max-width:720px; margin: 2rem auto 0;">
+    <h3 style="font-size:1.15rem; margin-bottom:0.75rem;">Mes crafts locaux <span id="local-count" style="color:var(--text-muted); font-size:0.9rem; font-weight:500;"></span></h3>
+    <div id="local-list" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+  </div>
+</section>
+
+<div class="toast" id="toast">✓ Sauvegardé</div>
+
+<footer>
+  <p>Guide complet dans le <a href="README.md">README</a></p>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script>
+const ingContainer = document.getElementById('ingredients');
+const output = document.getElementById('output');
+
+function addIngredientRow(qty = '', name = '') {
+  const row = document.createElement('div');
+  row.className = 'ing-row';
+  row.innerHTML = `
+    <input type="number" placeholder="Qté" class="ing-qty" min="1" value="${qty}" />
+    <input type="text" placeholder="Nom de l'ingrédient" class="ing-name" value="${escapeAttr(name)}" />
+    <button type="button" class="btn-remove">✕</button>
+  `;
+  row.querySelector('.btn-remove').onclick = () => { row.remove(); updateOutput(); };
+  row.querySelectorAll('input').forEach(i => i.addEventListener('input', updateOutput));
+  ingContainer.appendChild(row);
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/"/g, '&quot;');
+}
+
+function slugify(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function getCategoryName(slug) {
+  const sel = document.getElementById('category');
+  return sel.options[sel.selectedIndex].text;
+}
+
+function buildCraft() {
+  const name = document.getElementById('name').value.trim();
+  const category = document.getElementById('category').value;
+  const image = document.getElementById('image').value.trim() || null;
+  const ingredients = Array.from(ingContainer.querySelectorAll('.ing-row')).map(row => ({
+    qty: parseInt(row.querySelector('.ing-qty').value, 10) || 1,
+    name: row.querySelector('.ing-name').value.trim(),
+  })).filter(i => i.name);
+
+  if (!name) return null;
+  return {
+    id: `${category}-${slugify(name)}`,
+    name,
+    category,
+    categoryName: getCategoryName(category),
+    image,
+    ingredients,
+    source: 'user',
+  };
+}
+
+function updateOutput() {
+  const craft = buildCraft();
+  output.textContent = craft ? JSON.stringify(craft, null, 2) : '{ }';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem('ng_local_crafts') || '[]'); } catch { return []; }
+}
+
+function saveLocal(list) {
+  localStorage.setItem('ng_local_crafts', JSON.stringify(list));
+}
+
+function renderLocalList() {
+  const list = loadLocal();
+  document.getElementById('local-count').textContent = list.length ? `(${list.length})` : '';
+  const container = document.getElementById('local-list');
+  container.innerHTML = '';
+  if (!list.length) {
+    container.innerHTML = '<p style="color:var(--text-dim); font-size:0.9rem;">Aucun craft local. Sauvegardes apparaîtront ici.</p>';
+    return;
+  }
+  for (const c of list) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);';
+    div.innerHTML = `
+      <div>
+        <strong>${escapeHTML(c.name)}</strong>
+        <span style="color:var(--text-muted); font-size:0.85rem; margin-left:0.5rem;">${escapeHTML(c.categoryName || c.category)}</span>
+      </div>
+      <button class="btn-remove" data-id="${escapeAttr(c.id)}">✕</button>
+    `;
+    div.querySelector('button').onclick = (e) => {
+      const id = e.target.dataset.id;
+      saveLocal(loadLocal().filter(x => x.id !== id));
+      renderLocalList();
+      showToast('Supprimé');
+    };
+    container.appendChild(div);
+  }
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Wire up
+document.getElementById('add-ing').onclick = () => addIngredientRow();
+document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
+
+document.getElementById('save-local').onclick = () => {
+  const craft = buildCraft();
+  if (!craft || !craft.name || !craft.ingredients.length) {
+    showToast('Remplis nom et au moins 1 ingrédient');
+    return;
+  }
+  const list = loadLocal();
+  const existingIdx = list.findIndex(c => c.id === craft.id);
+  if (existingIdx >= 0) list[existingIdx] = craft;
+  else list.push(craft);
+  saveLocal(list);
+  renderLocalList();
+  showToast('✓ Craft sauvegardé localement');
+};
+
+document.getElementById('export-json').onclick = async () => {
+  const craft = buildCraft();
+  if (!craft) { showToast('Rien à exporter'); return; }
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(craft, null, 2));
+    showToast('✓ JSON copié dans le presse-papier');
+  } catch {
+    showToast('Impossible de copier, sélectionne le JSON manuellement');
+  }
+};
+
+document.getElementById('reset-local').onclick = () => {
+  if (!confirm('Effacer tous les crafts locaux ?')) return;
+  localStorage.removeItem('ng_local_crafts');
+  renderLocalList();
+  showToast('Crafts locaux effacés');
+};
+
+addIngredientRow();
+addIngredientRow();
+updateOutput();
+renderLocalList();
+</script>
+</body>
+</html>

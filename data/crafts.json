@@ -1,0 +1,543 @@
+[
+  {
+    "id": "crafts-de-base-table-de-craft-etabli",
+    "name": "Table de Craft + (Établi)",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Craft.png",
+    "ingredients": [
+      {
+        "qty": 8,
+        "name": "Planche de Bois"
+      },
+      {
+        "qty": 1,
+        "name": "Table de Craft"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-manche-doutils",
+    "name": "Manche d'Outils",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Manche.png",
+    "ingredients": [
+      {
+        "qty": 3,
+        "name": "Stick"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-cordelettes",
+    "name": "Cordelettes",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_85.png",
+    "ingredients": [
+      {
+        "qty": 2,
+        "name": "Fils d'araignée"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-ecrous",
+    "name": "Écrous",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_86.png",
+    "ingredients": [
+      {
+        "qty": 4,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-clous",
+    "name": "Clous",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_87.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-fils-barbeles",
+    "name": "Fils Barbelés",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_88.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Lingot de Fer"
+      },
+      {
+        "qty": 3,
+        "name": "Cordelette"
+      },
+      {
+        "qty": 5,
+        "name": "Clou"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-plaque-de-bois",
+    "name": "Plaque de Bois",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Red63m6nlkphbccnmohmk8bd6k3h5_1393623950.5811animation3_250_lent.gif",
+    "ingredients": [
+      {
+        "qty": 9,
+        "name": "Planche (quelconque)"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-lame-courbe",
+    "name": "Lame Courbe",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_93.png",
+    "ingredients": [
+      {
+        "qty": 4,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-lame-de-couteau",
+    "name": "Lame de Couteau",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_94.png",
+    "ingredients": [
+      {
+        "qty": 4,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-lame-de-hache",
+    "name": "Lame de Hache",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_95.png",
+    "ingredients": [
+      {
+        "qty": 7,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-lame-de-katana",
+    "name": "Lame de Katana",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_96.png",
+    "ingredients": [
+      {
+        "qty": 5,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "crafts-de-base-lame-de-machette",
+    "name": "Lame de Machette",
+    "category": "crafts-de-base",
+    "categoryName": "Crafts de base",
+    "image": "Screenshot_97.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-hache-commune",
+    "name": "Hache Commune",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_1.png",
+    "ingredients": [
+      {
+        "qty": 3,
+        "name": "Stick"
+      },
+      {
+        "qty": 2,
+        "name": "Cordelette"
+      },
+      {
+        "qty": 1,
+        "name": "Tête de Hache"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-pied-de-biche",
+    "name": "Pied de Biche",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_2.png",
+    "ingredients": [
+      {
+        "qty": 8,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-tuyau",
+    "name": "Tuyau",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_3.png",
+    "ingredients": [
+      {
+        "qty": 6,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-cle-anglaise",
+    "name": "Clé Anglaise",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_4.png",
+    "ingredients": [
+      {
+        "qty": 7,
+        "name": "Lingot de Fer"
+      },
+      {
+        "qty": 1,
+        "name": "Écrou"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-cle-anglaise-renforcee",
+    "name": "Clé Anglaise Renforcée",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_5.png",
+    "ingredients": [
+      {
+        "qty": 5,
+        "name": "Éecrou"
+      },
+      {
+        "qty": 1,
+        "name": "Clé Anglaise (durabilité au MAX)"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-pagaie",
+    "name": "Pagaie",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_7.png",
+    "ingredients": [
+      {
+        "qty": 2,
+        "name": "Plaque de Bois"
+      },
+      {
+        "qty": 2,
+        "name": "Manche d'Outils"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-fauscille",
+    "name": "Fauscille",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_8.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Lame Courbe"
+      },
+      {
+        "qty": 1,
+        "name": "Cordelette"
+      },
+      {
+        "qty": 2,
+        "name": "Manche d'Outils"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-masse",
+    "name": "Masse",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_10.png",
+    "ingredients": [
+      {
+        "qty": 4,
+        "name": "Clou"
+      },
+      {
+        "qty": 2,
+        "name": "Plaque de Bois"
+      },
+      {
+        "qty": 2,
+        "name": "Manche d'Outils"
+      },
+      {
+        "qty": 2,
+        "name": "Cordelette"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-couteau-fait-maison",
+    "name": "Couteau fait maison",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_27.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Lame de Couteau"
+      },
+      {
+        "qty": 1,
+        "name": "Manche d'Outils"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-couteau-commun",
+    "name": "Couteau Commun",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_28.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Couteau Fait-maison"
+      },
+      {
+        "qty": 2,
+        "name": "Lingot de Fer"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-communes-batte-de-baseball-commune",
+    "name": "Batte de Baseball Commune",
+    "category": "armes-communes",
+    "categoryName": "Armes Communes",
+    "image": "Screenshot_29.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Manche d'Outils"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-peu-communes-marteau-a-clous",
+    "name": "Marteau à Clous",
+    "category": "armes-peu-communes",
+    "categoryName": "Armes Peu Communes",
+    "image": "Screenshot_50.png",
+    "ingredients": [
+      {
+        "qty": 1,
+        "name": "Tête de Marteau"
+      },
+      {
+        "qty": 2,
+        "name": "Plaque de Fer"
+      },
+      {
+        "qty": 3,
+        "name": "Manche d'Outils"
+      },
+      {
+        "qty": 1,
+        "name": "Clou"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-peu-communes-batte-de-baseball-non-commune",
+    "name": "Batte de Baseball [Non Commune]",
+    "category": "armes-peu-communes",
+    "categoryName": "Armes Peu Communes",
+    "image": "Screenshot_51.png",
+    "ingredients": [
+      {
+        "qty": 6,
+        "name": "Plaque de Bois"
+      },
+      {
+        "qty": 2,
+        "name": "Cordelette"
+      },
+      {
+        "qty": 2,
+        "name": "Manche d'Outils"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-peu-communes-batte-de-baseball-en-metal",
+    "name": "Batte de Baseball en Métal",
+    "category": "armes-peu-communes",
+    "categoryName": "Armes Peu Communes",
+    "image": "Screenshot_52.png",
+    "ingredients": [
+      {
+        "qty": 6,
+        "name": "Plaque d'Acier"
+      },
+      {
+        "qty": 2,
+        "name": "Manche d'Outils"
+      },
+      {
+        "qty": 2,
+        "name": "Cordelette"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armes-peu-communes-couteau-militaire",
+    "name": "Couteau Militaire",
+    "category": "armes-peu-communes",
+    "categoryName": "Armes Peu Communes",
+    "image": "Screenshot_53.png",
+    "ingredients": [
+      {
+        "qty": 2,
+        "name": "Plaque de Fer"
+      },
+      {
+        "qty": 1,
+        "name": "Cordelette"
+      },
+      {
+        "qty": 1,
+        "name": "Manche d'Outils"
+      }
+    ],
+    "source": "wiki"
+  },
+  {
+    "id": "armures-armures-en-fer",
+    "name": "Armures en Fer",
+    "category": "armures",
+    "categoryName": "Armures",
+    "image": "Screenshot_70.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "armures-armures-en-or",
+    "name": "Armures en Or",
+    "category": "armures",
+    "categoryName": "Armures",
+    "image": "Screenshot_74.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "armures-armures-en-diamant",
+    "name": "Armures en Diamant",
+    "category": "armures",
+    "categoryName": "Armures",
+    "image": "Screenshot_78.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "outils-tete-doutils",
+    "name": "Tête d'Outils",
+    "category": "outils",
+    "categoryName": "Outils",
+    "image": "Screenshot_92.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "outils-pioches",
+    "name": "Pioches",
+    "category": "outils",
+    "categoryName": "Outils",
+    "image": "Screenshot_30.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "outils-pelles",
+    "name": "Pelles",
+    "category": "outils",
+    "categoryName": "Outils",
+    "image": "Screenshot_35.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "outils-haches",
+    "name": "Haches",
+    "category": "outils",
+    "categoryName": "Outils",
+    "image": "Screenshot_40.png",
+    "ingredients": [],
+    "source": "wiki"
+  },
+  {
+    "id": "outils-faux",
+    "name": "Faux",
+    "category": "outils",
+    "categoryName": "Outils",
+    "image": "Screenshot_45.png",
+    "ingredients": [],
+    "source": "wiki"
+  }
+]

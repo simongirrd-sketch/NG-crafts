@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Craft — NG Crafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">⛏️</span>
+      <span>NG Crafts</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">Accueil</a>
+      <a class="nav-link" href="crafts.html">Crafts</a>
+      <a class="nav-link" href="admin.html">Ajouter</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container" id="main" style="padding: 2rem 1.5rem 4rem;">
+  <p style="color: var(--text-muted);">Chargement…</p>
+</main>
+
+<footer>
+  <p>Données: <a href="https://nationsglory-dark.fandom.com/fr/wiki/Crafts" target="_blank" rel="noopener">wiki NationsGlory Dark</a></p>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script>
+const id = new URLSearchParams(location.search).get('id');
+
+(async () => {
+  const main = document.getElementById('main');
+  if (!id) {
+    main.innerHTML = '<p>Aucun craft spécifié.</p>';
+    return;
+  }
+  try {
+    const crafts = await loadCrafts();
+    const craft = crafts.find(c => c.id === id);
+    if (!craft) {
+      main.innerHTML = `<p>Craft introuvable: <code>${escapeHTML(id)}</code></p><a href="crafts.html" class="btn btn-secondary" style="margin-top:1rem;">← Retour à la liste</a>`;
+      return;
+    }
+    render(craft, crafts);
+  } catch (e) {
+    main.innerHTML = '<p>Erreur de chargement.</p>';
+    console.error(e);
+  }
+})();
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function render(c, all) {
+  const meta = catMeta(c.category);
+  document.title = `${c.name} — NG Crafts`;
+
+  const related = all.filter(x => x.category === c.category && x.id !== c.id).slice(0, 4);
+  const ingredients = c.ingredients || [];
+
+  document.getElementById('main').innerHTML = `
+    <a href="crafts.html?cat=${encodeURIComponent(c.category)}" class="nav-link" style="display:inline-flex; padding-left:0;">← ${escapeHTML(c.categoryName || c.category)}</a>
+
+    <div class="detail-hero">
+      <div class="detail-icon" style="color:${meta.color}">${meta.icon}</div>
+      <div>
+        <div class="detail-cat">${escapeHTML(c.categoryName || c.category)}</div>
+        <h1 class="detail-title">${escapeHTML(c.name)}</h1>
+        <p style="color: var(--text-muted);">
+          ${ingredients.length} ingrédient${ingredients.length > 1 ? 's' : ''} ·
+          ${c.source === 'user' ? '<span style="color:var(--accent)">Craft personnalisé</span>' : 'Source: wiki'}
+        </p>
+      </div>
+    </div>
+
+    <section>
+      <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Recette</h2>
+      ${ingredients.length ? `
+        <ul class="detail-ing-list">
+          ${ingredients.map(i => `
+            <li class="detail-ing-item">
+              <span class="detail-ing-qty">${i.qty}×</span>
+              <span>${escapeHTML(i.name)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      ` : '<p style="color: var(--text-muted);">Aucun ingrédient renseigné.</p>'}
+    </section>
+
+    ${related.length ? `
+      <section style="margin-top: 3rem;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Dans la même catégorie</h2>
+        <div class="grid" id="related"></div>
+      </section>
+    ` : ''}
+  `;
+
+  const relatedGrid = document.getElementById('related');
+  if (relatedGrid) {
+    for (const r of related) relatedGrid.appendChild(renderCraftCard(r));
+  }
+}
+
+function renderCraftCard(c) {
+  const meta = catMeta(c.category);
+  const a = document.createElement('a');
+  a.className = 'craft-card';
+  a.href = `craft.html?id=${encodeURIComponent(c.id)}`;
+  a.innerHTML = `
+    ${c.source === 'user' ? '<span class="badge-user">user</span>' : ''}
+    <div class="craft-card-head">
+      <div class="craft-icon" style="color:${meta.color}">${meta.icon}</div>
+      <div>
+        <div class="craft-cat">${escapeHTML(c.categoryName || c.category)}</div>
+        <h4>${escapeHTML(c.name)}</h4>
+      </div>
+    </div>
+    <div class="ingredients">
+      ${(c.ingredients || []).slice(0, 4).map(i =>
+        `<span class="ingredient"><span class="qty">${i.qty}×</span>${escapeHTML(i.name)}</span>`
+      ).join('')}
+    </div>
+  `;
+  return a;
+}
+</script>
+</body>
+</html>

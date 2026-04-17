@@ -1,0 +1,38 @@
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Outils: Partie 1</span></h2>
+=='''Tête d'Outils'''==
+
+<p style="text-align:center;">
+</p>
+
+<p style="text-align:center;">[[Fichier:Screenshot_92.png|200px]] [[Fichier:Screenshot_90.png|200px]] [[Fichier:Screenshot_91.png|200px]] [[Fichier:Screenshot_89.png|200px]]</p>
+
+<p style="text-align:center;">'''Note: La Craft est de même pour les Outils en Fer, Or et Pierre'''</p>
+
+<p style="text-align:center;"></p>
+
+<p style="text-align:center;">'''Attention ! Les Outils en Bois se Craft avec des Plaques en Bois'''</p>
+
+<p style="text-align:center;">[[Fichier:Pioche_bois.png]] [[Fichier:Pelle_bois.png]] [[Fichier:Hache_bois.png]] [[Fichier:Faux_bois.png]]</p>
+
+
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Outils: Partie 2</span></h2>
+
+<center>
+=='''Pioches'''==
+<p style="text-align:center;">
+</p>
+<p style="text-align:center;">[[Fichier:Screenshot_30.png|200px]] [[Fichier:Screenshot_31.png|200px]] [[Fichier:Screenshot_32.png|200px]] [[Fichier:Screenshot_33.png|200px]] [[Fichier:Screenshot_34.png|200px]]</p>
+
+=='''Pelles'''==
+<p style="text-align:center;">[[Fichier:Screenshot_35.png|200px]] [[Fichier:Screenshot_36.png|200px]] [[Fichier:Screenshot_37.png|200px]] [[Fichier:Screenshot_38.png|200px]] [[Fichier:Screenshot_39.png|200px]]</p>
+
+
+
+=='''Haches'''==
+<p style="text-align:center;">[[Fichier:Screenshot_40.png|200px]] [[Fichier:Screenshot_41.png|200px]] [[Fichier:Screenshot_42.png|200px]] [[Fichier:Screenshot_43.png|200px]] [[Fichier:Screenshot_44.png|200px]]</p>
+
+
+
+=='''Faux'''==
+<p style="text-align:center;">[[Fichier:Screenshot_45.png|200px]] [[Fichier:Screenshot_46.png|200px]] [[Fichier:Screenshot_47.png|200px]] [[Fichier:Screenshot_48.png|200px]] [[Fichier:Screenshot_49.png|200px]]</p>
+</center>

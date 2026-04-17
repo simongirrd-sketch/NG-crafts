@@ -1,0 +1,9 @@
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:center; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Séléctionnez une catégorie</span></h2>
+
+<h3 style="text-align:center;">          [[Fichier:Stone-Sword-icon.png|120px|link=http://fr.nationsglory-dark.wikia.com/wiki/Armes_Communes]]'''CATÉGORIE: ARMES COMMUNES               '''</h3>
+
+<p style="text-align:center;">[[Fichier:Iron-Sword-icon.png|120px|link=http://fr.nationsglory-dark.wikia.com/wiki/Armes_Peu_Communes]]'''CATÉGORIE: ARMES PEU COMMUNES         '''</p>
+
+<p style="text-align:center;">[[Fichier:Gold-Sword-icon.png|120px|link=http://fr.nationsglory-dark.wikia.com/wiki/Améliorations]]'''CATÉGORIE: AMÉLIORATIONS                     '''</p>
+
+<p style="text-align:center;">[[Fichier:Diamond-Sword-icon.png|120px|link=http://fr.nationsglory-dark.wikia.com/wiki/Légendaires]]'''CATÉGORIE: ARMES LÉGENDAIRES            '''</p>

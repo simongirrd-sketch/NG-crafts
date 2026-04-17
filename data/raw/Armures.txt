@@ -1,0 +1,24 @@
+<h2 style="overflow:auto; padding:0.3em 0.4em 0.2em 0.4em; margin:10px 0 10px 0; background-color: #191919; color:#ffffff; font-size:120%; font-weight:bold; text-align:left; border-radius: 6px; box-shadow: 0 0 10px -3px #000; border: none;"><span class="mw-headline" id="Mods_Used_in_Tekkit_.28WIP.29">Armures - Forge</span></h2>
+<p style="text-align:center;">
+</p>
+<center>[[Fichier:No_42_crafting_armor_by_lighiting_dragon-d578uw1.jpg|none|left|400px]]</center>
+=='''Armures en Fer'''==
+
+<p style="text-align:center;">
+</p>
+<p style="text-align:center;">[[Fichier:Screenshot_70.png|200px]] [[Fichier:Screenshot_71.png|200px]] [[Fichier:Screenshot_72.png|200px]] [[Fichier:Screenshot_73.png|200px]]</p>
+<p style="text-align:center;">♦ Plaques de Fer </p>
+
+<p style="text-align:center;">♦ Plaques d'Acier </p>
+
+=='''Armures en Or'''==
+<p style="text-align:center;">[[Fichier:Screenshot_74.png|200px]] [[Fichier:Screenshot_75.png|200px]] [[Fichier:Screenshot_76.png|200px]] [[Fichier:Screenshot_77.png|200px]]</p>
+<p style="text-align:center;">♦ Lingots de Cobalt</p>
+
+<p style="text-align:center;">♦ Plaque d'Or</p>
+=='''Armures en Diamant'''==
+<p style="text-align:center;">[[Fichier:Screenshot_78.png|200px]] [[Fichier:Screenshot_79.png|200px]] [[Fichier:Screenshot_80.png|200px]] [[Fichier:Screenshot_81.png|200px]]</p>
+
+<p style="text-align:center;">♦ Plaques de Diamant</p>
+
+<p style="text-align:center;">♦ Lingots de Titane</p>
