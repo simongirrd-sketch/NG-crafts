@@ -20,12 +20,33 @@
     <div class="nav-links">
       <a class="nav-link" href="index.html">Accueil</a>
       <a class="nav-link" href="crafts.html">Crafts</a>
-      <a class="nav-link active" href="admin.html">Ajouter</a>
+      <a class="nav-link active" href="admin.html" data-admin-only>Ajouter</a>
+      <button class="nav-link" id="logout-btn" data-admin-only style="display:none;">Déconnexion</button>
     </div>
   </div>
 </nav>
 
-<section class="container" style="padding: 3rem 1.5rem;">
+<!-- Login gate -->
+<section class="container" id="login-section" style="padding: 5rem 1.5rem; max-width: 480px;">
+  <div class="form">
+    <div style="text-align:center; margin-bottom: 1.5rem;">
+      <div style="font-size: 2.5rem;">🔒</div>
+      <h2 style="margin-top:0.5rem;">Espace admin</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Cette section est réservée. Entre le mot de passe.</p>
+    </div>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" autocomplete="current-password" autofocus required />
+      </div>
+      <div id="login-error" style="color: var(--red); font-size: 0.88rem; margin-bottom: 1rem; min-height: 1.25rem;"></div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Se connecter</button>
+    </form>
+  </div>
+</section>
+
+<!-- Admin panel (hidden until authenticated) -->
+<section class="container" id="admin-section" style="padding: 3rem 1.5rem; display: none;">
   <div class="section-head" style="justify-content:flex-start; flex-direction:column; align-items:flex-start;">
     <h2>Ajouter un craft</h2>
     <p style="color:var(--text-muted)">Crée un craft, teste-le localement, puis exporte le JSON à coller dans <code>data/crafts.json</code>.</p>
@@ -86,156 +107,199 @@
   <p>Guide complet dans le <a href="README.md">README</a></p>
 </footer>
 
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/data.js"></script>
 <script>
-const ingContainer = document.getElementById('ingredients');
-const output = document.getElementById('output');
+// --- Auth gate ---
+const loginSection = document.getElementById('login-section');
+const adminSection = document.getElementById('admin-section');
+const logoutBtn = document.getElementById('logout-btn');
 
-function addIngredientRow(qty = '', name = '') {
-  const row = document.createElement('div');
-  row.className = 'ing-row';
-  row.innerHTML = `
-    <input type="number" placeholder="Qté" class="ing-qty" min="1" value="${qty}" />
-    <input type="text" placeholder="Nom de l'ingrédient" class="ing-name" value="${escapeAttr(name)}" />
-    <button type="button" class="btn-remove">✕</button>
-  `;
-  row.querySelector('.btn-remove').onclick = () => { row.remove(); updateOutput(); };
-  row.querySelectorAll('input').forEach(i => i.addEventListener('input', updateOutput));
-  ingContainer.appendChild(row);
+function showAdmin() {
+  loginSection.style.display = 'none';
+  adminSection.style.display = '';
+  logoutBtn.style.display = '';
+  gateAdminUI();
+  initAdmin();
 }
 
-function escapeAttr(s) {
-  return String(s).replace(/"/g, '&quot;');
+function showLogin() {
+  loginSection.style.display = '';
+  adminSection.style.display = 'none';
+  logoutBtn.style.display = 'none';
 }
 
-function slugify(s) {
-  return s.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-}
+if (isAdmin()) showAdmin();
+else showLogin();
 
-function getCategoryName(slug) {
-  const sel = document.getElementById('category');
-  return sel.options[sel.selectedIndex].text;
-}
-
-function buildCraft() {
-  const name = document.getElementById('name').value.trim();
-  const category = document.getElementById('category').value;
-  const image = document.getElementById('image').value.trim() || null;
-  const ingredients = Array.from(ingContainer.querySelectorAll('.ing-row')).map(row => ({
-    qty: parseInt(row.querySelector('.ing-qty').value, 10) || 1,
-    name: row.querySelector('.ing-name').value.trim(),
-  })).filter(i => i.name);
-
-  if (!name) return null;
-  return {
-    id: `${category}-${slugify(name)}`,
-    name,
-    category,
-    categoryName: getCategoryName(category),
-    image,
-    ingredients,
-    source: 'user',
-  };
-}
-
-function updateOutput() {
-  const craft = buildCraft();
-  output.textContent = craft ? JSON.stringify(craft, null, 2) : '{ }';
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-function loadLocal() {
-  try { return JSON.parse(localStorage.getItem('ng_local_crafts') || '[]'); } catch { return []; }
-}
-
-function saveLocal(list) {
-  localStorage.setItem('ng_local_crafts', JSON.stringify(list));
-}
-
-function renderLocalList() {
-  const list = loadLocal();
-  document.getElementById('local-count').textContent = list.length ? `(${list.length})` : '';
-  const container = document.getElementById('local-list');
-  container.innerHTML = '';
-  if (!list.length) {
-    container.innerHTML = '<p style="color:var(--text-dim); font-size:0.9rem;">Aucun craft local. Sauvegardes apparaîtront ici.</p>';
-    return;
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = document.getElementById('password').value;
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  const ok = await tryLogin(pw);
+  if (ok) {
+    showAdmin();
+  } else {
+    err.textContent = 'Mot de passe incorrect.';
+    document.getElementById('password').value = '';
   }
-  for (const c of list) {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);';
-    div.innerHTML = `
-      <div>
-        <strong>${escapeHTML(c.name)}</strong>
-        <span style="color:var(--text-muted); font-size:0.85rem; margin-left:0.5rem;">${escapeHTML(c.categoryName || c.category)}</span>
-      </div>
-      <button class="btn-remove" data-id="${escapeAttr(c.id)}">✕</button>
+});
+
+logoutBtn.addEventListener('click', () => {
+  logout();
+  showLogin();
+  document.getElementById('password').value = '';
+});
+
+// --- Admin logic (run only after auth) ---
+let adminInitialized = false;
+function initAdmin() {
+  if (adminInitialized) return;
+  adminInitialized = true;
+
+  const ingContainer = document.getElementById('ingredients');
+  const output = document.getElementById('output');
+
+  function addIngredientRow(qty = '', name = '') {
+    const row = document.createElement('div');
+    row.className = 'ing-row';
+    row.innerHTML = `
+      <input type="number" placeholder="Qté" class="ing-qty" min="1" value="${qty}" />
+      <input type="text" placeholder="Nom de l'ingrédient" class="ing-name" value="${escapeAttr(name)}" />
+      <button type="button" class="btn-remove">✕</button>
     `;
-    div.querySelector('button').onclick = (e) => {
-      const id = e.target.dataset.id;
-      saveLocal(loadLocal().filter(x => x.id !== id));
-      renderLocalList();
-      showToast('Supprimé');
+    row.querySelector('.btn-remove').onclick = () => { row.remove(); updateOutput(); };
+    row.querySelectorAll('input').forEach(i => i.addEventListener('input', updateOutput));
+    ingContainer.appendChild(row);
+  }
+
+  function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+  function slugify(s) {
+    return s.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+  }
+
+  function getCategoryName(slug) {
+    const sel = document.getElementById('category');
+    return sel.options[sel.selectedIndex].text;
+  }
+
+  function buildCraft() {
+    const name = document.getElementById('name').value.trim();
+    const category = document.getElementById('category').value;
+    const image = document.getElementById('image').value.trim() || null;
+    const ingredients = Array.from(ingContainer.querySelectorAll('.ing-row')).map(row => ({
+      qty: parseInt(row.querySelector('.ing-qty').value, 10) || 1,
+      name: row.querySelector('.ing-name').value.trim(),
+    })).filter(i => i.name);
+
+    if (!name) return null;
+    return {
+      id: `${category}-${slugify(name)}`,
+      name,
+      category,
+      categoryName: getCategoryName(category),
+      image,
+      ingredients,
+      source: 'user',
     };
-    container.appendChild(div);
   }
-}
 
-function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// Wire up
-document.getElementById('add-ing').onclick = () => addIngredientRow();
-document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
-
-document.getElementById('save-local').onclick = () => {
-  const craft = buildCraft();
-  if (!craft || !craft.name || !craft.ingredients.length) {
-    showToast('Remplis nom et au moins 1 ingrédient');
-    return;
+  function updateOutput() {
+    const craft = buildCraft();
+    output.textContent = craft ? JSON.stringify(craft, null, 2) : '{ }';
   }
-  const list = loadLocal();
-  const existingIdx = list.findIndex(c => c.id === craft.id);
-  if (existingIdx >= 0) list[existingIdx] = craft;
-  else list.push(craft);
-  saveLocal(list);
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function loadLocal() {
+    try { return JSON.parse(localStorage.getItem('ng_local_crafts') || '[]'); } catch { return []; }
+  }
+  function saveLocal(list) { localStorage.setItem('ng_local_crafts', JSON.stringify(list)); }
+
+  function renderLocalList() {
+    const list = loadLocal();
+    document.getElementById('local-count').textContent = list.length ? `(${list.length})` : '';
+    const container = document.getElementById('local-list');
+    container.innerHTML = '';
+    if (!list.length) {
+      container.innerHTML = '<p style="color:var(--text-dim); font-size:0.9rem;">Aucun craft local. Sauvegardes apparaîtront ici.</p>';
+      return;
+    }
+    for (const c of list) {
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);';
+      div.innerHTML = `
+        <div>
+          <strong>${escapeHTML(c.name)}</strong>
+          <span style="color:var(--text-muted); font-size:0.85rem; margin-left:0.5rem;">${escapeHTML(c.categoryName || c.category)}</span>
+        </div>
+        <button class="btn-remove" data-id="${escapeAttr(c.id)}">✕</button>
+      `;
+      div.querySelector('button').onclick = (e) => {
+        const id = e.target.dataset.id;
+        saveLocal(loadLocal().filter(x => x.id !== id));
+        renderLocalList();
+        showToast('Supprimé');
+      };
+      container.appendChild(div);
+    }
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  document.getElementById('add-ing').onclick = () => addIngredientRow();
+  document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
+
+  document.getElementById('save-local').onclick = () => {
+    const craft = buildCraft();
+    if (!craft || !craft.name || !craft.ingredients.length) {
+      showToast('Remplis nom et au moins 1 ingrédient');
+      return;
+    }
+    const list = loadLocal();
+    const idx = list.findIndex(c => c.id === craft.id);
+    if (idx >= 0) list[idx] = craft; else list.push(craft);
+    saveLocal(list);
+    renderLocalList();
+    showToast('✓ Craft sauvegardé localement');
+  };
+
+  document.getElementById('export-json').onclick = async () => {
+    const craft = buildCraft();
+    if (!craft) { showToast('Rien à exporter'); return; }
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(craft, null, 2));
+      showToast('✓ JSON copié');
+    } catch {
+      showToast('Copie impossible, sélectionne manuellement');
+    }
+  };
+
+  document.getElementById('reset-local').onclick = () => {
+    if (!confirm('Effacer tous les crafts locaux ?')) return;
+    localStorage.removeItem('ng_local_crafts');
+    renderLocalList();
+    showToast('Crafts locaux effacés');
+  };
+
+  addIngredientRow();
+  addIngredientRow();
+  updateOutput();
   renderLocalList();
-  showToast('✓ Craft sauvegardé localement');
-};
-
-document.getElementById('export-json').onclick = async () => {
-  const craft = buildCraft();
-  if (!craft) { showToast('Rien à exporter'); return; }
-  try {
-    await navigator.clipboard.writeText(JSON.stringify(craft, null, 2));
-    showToast('✓ JSON copié dans le presse-papier');
-  } catch {
-    showToast('Impossible de copier, sélectionne le JSON manuellement');
-  }
-};
-
-document.getElementById('reset-local').onclick = () => {
-  if (!confirm('Effacer tous les crafts locaux ?')) return;
-  localStorage.removeItem('ng_local_crafts');
-  renderLocalList();
-  showToast('Crafts locaux effacés');
-};
-
-addIngredientRow();
-addIngredientRow();
-updateOutput();
-renderLocalList();
+}
 </script>
 </body>
 </html>
