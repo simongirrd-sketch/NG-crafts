@@ -67,6 +67,18 @@
     transition:all 0.15s;
   }
   .btn-restore:hover { background:var(--accent-glow); border-color:var(--accent); }
+  .btn-edit {
+    background:transparent; border:1px solid var(--border-strong); color:#fbbf24;
+    padding:0.4rem 0.75rem; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:500;
+    transition:all 0.15s;
+  }
+  .btn-edit:hover { background:rgba(251,191,36,0.1); border-color:#fbbf24; }
+  .edit-banner {
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.4);
+    padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:1rem;
+    color:#fbbf24; font-size:0.9rem;
+  }
 </style>
 </head>
 <body>
@@ -125,6 +137,10 @@
   <!-- TAB: Add -->
   <div class="tab-panel active" data-panel="add">
     <div class="form">
+      <div id="edit-banner" class="edit-banner" style="display:none;">
+        <span>✎ Modification de <strong id="edit-banner-name"></strong></span>
+        <button type="button" class="btn btn-secondary" id="cancel-edit" style="padding:0.35rem 0.75rem; font-size:0.85rem;">Annuler</button>
+      </div>
       <div class="form-group">
         <label for="name">Nom du craft *</label>
         <input type="text" id="name" placeholder="Ex: Épée du Dragon" required />
@@ -198,6 +214,7 @@
 // --- Admin state (declared early so initAdmin can access them) ---
 let adminInitialized = false;
 let allCraftsCache = [];
+let editingId = null; // id of the craft currently being edited (null = add mode)
 
 // --- Auth gate ---
 const loginSection = document.getElementById('login-section');
@@ -317,8 +334,10 @@ function initAddTab() {
     const meta = catMeta(category);
     const displayName = meta.name && meta.name !== category ? meta.name
       : (allCraftsCache.find(c => c.category === category)?.categoryName || category);
+    // Preserve the original id when editing so the override replaces the right row.
+    const id = editingId || `${category}-${slugify(name)}`;
     return {
-      id: `${category}-${slugify(name)}`,
+      id,
       name, category, categoryName: displayName, image, ingredients, source: 'user',
     };
   }
@@ -333,9 +352,45 @@ function initAddTab() {
     document.getElementById('image').value = '';
     ingContainer.innerHTML = '';
     addIngredientRow(); addIngredientRow();
+    exitEditMode();
     updateOutput();
   }
 
+  function exitEditMode() {
+    editingId = null;
+    document.getElementById('edit-banner').style.display = 'none';
+    document.getElementById('save-local').textContent = '💾 Ajouter le craft';
+  }
+
+  // Exposed to module scope via window so [data-edit] handlers can trigger it.
+  window.startEditCraft = (craft) => {
+    editingId = craft.id;
+    document.getElementById('name').value = craft.name || '';
+    document.getElementById('image').value = craft.image || '';
+    // Make sure the category option exists (user may have just added a category).
+    populateCategorySelect();
+    const sel = document.getElementById('category');
+    if (![...sel.options].some(o => o.value === craft.category)) {
+      const opt = document.createElement('option');
+      opt.value = craft.category;
+      opt.textContent = craft.category;
+      sel.appendChild(opt);
+    }
+    sel.value = craft.category;
+    ingContainer.innerHTML = '';
+    const ings = craft.ingredients || [];
+    if (!ings.length) { addIngredientRow(); }
+    else { for (const i of ings) addIngredientRow(i.qty, i.name); }
+    document.getElementById('edit-banner').style.display = '';
+    document.getElementById('edit-banner-name').textContent = craft.name;
+    document.getElementById('save-local').textContent = '💾 Enregistrer les modifications';
+    // Switch to the Add tab.
+    document.querySelector('.tab[data-tab="add"]').click();
+    document.getElementById('name').focus();
+    updateOutput();
+  };
+
+  document.getElementById('cancel-edit').onclick = resetForm;
   document.getElementById('add-ing').onclick = () => { addIngredientRow(); };
   document.getElementById('clear-form').onclick = resetForm;
   document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
@@ -345,13 +400,18 @@ function initAddTab() {
     if (!craft || !craft.name || !craft.ingredients.length) {
       showToast('Remplis nom et au moins 1 ingrédient'); return;
     }
+    const wasEditing = !!editingId;
     const list = lsGet(LS.LOCAL, []);
     const idx = list.findIndex(c => c.id === craft.id);
     if (idx >= 0) list[idx] = craft; else list.push(craft);
     lsSet(LS.LOCAL, list);
     await reloadAllCrafts();
-    showToast('✓ Craft ajouté');
+    showToast(wasEditing ? '✓ Modifications enregistrées' : '✓ Craft ajouté');
     resetForm();
+    if (wasEditing) {
+      // Return to the manage list so the user sees their edit in context.
+      document.querySelector('.tab[data-tab="manage"]').click();
+    }
   };
 
   document.getElementById('export-json').onclick = async () => {
@@ -429,7 +489,8 @@ function renderManageRow(c, isDeleted) {
       </span>
       ${isDeleted
         ? `<button class="btn-restore" data-restore="${escapeAttr(c.id)}">↺ Restaurer</button>`
-        : `<button class="btn-danger" data-delete="${escapeAttr(c.id)}">✕ Supprimer</button>`
+        : `<button class="btn-edit" data-edit="${escapeAttr(c.id)}">✎ Modifier</button>
+           <button class="btn-danger" data-delete="${escapeAttr(c.id)}">✕ Supprimer</button>`
       }
     </div>
   `;
@@ -437,6 +498,15 @@ function renderManageRow(c, isDeleted) {
 }
 
 function attachManageHandlers() {
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.edit;
+      const craft = allCraftsCache.find(c => c.id === id);
+      if (!craft) { showToast('Craft introuvable'); return; }
+      window.startEditCraft(craft);
+    };
+  });
+
   document.querySelectorAll('[data-delete]').forEach(btn => {
     btn.onclick = () => {
       const id = btn.dataset.delete;

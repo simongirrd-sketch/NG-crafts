@@ -57,7 +57,9 @@ async function loadCrafts({ includeDeleted = false } = {}) {
   const deleted = getDeletedIds();
   const catOverrides = getCategoryOverrides();
 
-  let combined = [...wiki, ...local];
+  // Local entries override wiki entries with the same id (used for edits).
+  const localIds = new Set(local.map(c => c.id));
+  let combined = [...wiki.filter(c => !localIds.has(c.id)), ...local];
   if (!includeDeleted) combined = combined.filter(c => !deleted.has(c.id));
 
   return combined.map(c => applyCategoryOverride(c, catOverrides));
