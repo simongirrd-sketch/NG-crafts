@@ -3,11 +3,71 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ajouter un craft — NG Crafts</title>
+<title>Admin — NG Crafts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="assets/css/style.css" />
+<style>
+  .tabs { display:flex; gap:0.25rem; border-bottom:1px solid var(--border); margin-bottom:2rem; overflow-x:auto; }
+  .tab {
+    padding:0.7rem 1.1rem; background:transparent; border:none; color:var(--text-muted);
+    font-weight:500; font-size:0.95rem; cursor:pointer; border-bottom:2px solid transparent;
+    white-space:nowrap; transition:all 0.15s;
+  }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+  .manage-row {
+    display:flex; justify-content:space-between; align-items:center; gap:0.75rem;
+    padding:0.75rem 1rem; background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius-sm); margin-bottom:0.5rem;
+  }
+  .manage-row-info { flex:1; min-width:0; }
+  .manage-row-info strong { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .manage-row-info span { color:var(--text-muted); font-size:0.85rem; }
+  .cat-edit-row {
+    display:grid; grid-template-columns: 60px 1fr 1fr auto; gap:0.5rem; align-items:center;
+    padding:0.6rem; background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius-sm); margin-bottom:0.5rem;
+  }
+  .cat-edit-row input {
+    padding:0.55rem 0.7rem; background:var(--bg-elev); border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none; width:100%;
+  }
+  .cat-edit-row input:focus { border-color:var(--accent); }
+  .cat-edit-row .cat-emoji-input { text-align:center; font-size:1.1rem; }
+  .cat-group-head {
+    font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.1em; margin:1.25rem 0 0.5rem; padding-left:0.2rem;
+  }
+  .chip-badge {
+    font-size:0.7rem; padding:0.15rem 0.5rem; border-radius:999px;
+    font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; font-weight:600;
+  }
+  .chip-wiki { background:rgba(56,189,248,0.1); color:#38bdf8; }
+  .chip-user { background:var(--accent-glow); color:var(--accent); }
+  .chip-deleted { background:rgba(248,113,113,0.1); color:var(--red); }
+  .search-box {
+    width:100%; padding:0.7rem 1rem; background:var(--bg-elev); border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none;
+    margin-bottom:1rem;
+  }
+  .search-box:focus { border-color:var(--accent); }
+  .btn-danger {
+    background:transparent; border:1px solid var(--border-strong); color:var(--red);
+    padding:0.4rem 0.75rem; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:500;
+    transition:all 0.15s;
+  }
+  .btn-danger:hover { background:rgba(248,113,113,0.1); border-color:var(--red); }
+  .btn-restore {
+    background:transparent; border:1px solid var(--border-strong); color:var(--accent);
+    padding:0.4rem 0.75rem; border-radius:var(--radius-sm); font-size:0.85rem; font-weight:500;
+    transition:all 0.15s;
+  }
+  .btn-restore:hover { background:var(--accent-glow); border-color:var(--accent); }
+</style>
 </head>
 <body>
 
@@ -20,7 +80,7 @@
     <div class="nav-links">
       <a class="nav-link" href="index.html">Accueil</a>
       <a class="nav-link" href="crafts.html">Crafts</a>
-      <a class="nav-link active" href="admin.html" data-admin-only>Ajouter</a>
+      <a class="nav-link active" href="admin.html" data-admin-only>Admin</a>
       <button class="nav-link" id="logout-btn" data-admin-only style="display:none;">Déconnexion</button>
     </div>
   </div>
@@ -45,59 +105,79 @@
   </div>
 </section>
 
-<!-- Admin panel (hidden until authenticated) -->
-<section class="container" id="admin-section" style="padding: 3rem 1.5rem; display: none;">
-  <div class="section-head" style="justify-content:flex-start; flex-direction:column; align-items:flex-start;">
-    <h2>Ajouter un craft</h2>
-    <p style="color:var(--text-muted)">Crée un craft, teste-le localement, puis exporte le JSON à coller dans <code>data/crafts.json</code>.</p>
+<!-- Admin panel -->
+<section class="container" id="admin-section" style="padding: 2rem 1.5rem 4rem; display: none;">
+  <div class="section-head" style="margin-bottom:1rem;">
+    <div>
+      <h2>Administration</h2>
+      <p style="color:var(--text-muted)">Gère les crafts et catégories. Exporte vers <code>data/crafts.json</code> pour publier.</p>
+    </div>
+    <button class="btn btn-primary" id="export-full">📥 Exporter crafts.json</button>
   </div>
 
-  <div class="form">
-    <div class="form-group">
-      <label for="name">Nom du craft *</label>
-      <input type="text" id="name" placeholder="Ex: Épée du Dragon" required />
-    </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="add">➕ Ajouter</button>
+    <button class="tab" data-tab="manage">📋 Gérer les crafts</button>
+    <button class="tab" data-tab="categories">🏷️ Catégories</button>
+  </div>
 
-    <div class="form-group">
-      <label for="category">Catégorie *</label>
-      <select id="category">
-        <option value="crafts-de-base">Crafts de base</option>
-        <option value="armes-communes">Armes Communes</option>
-        <option value="armes-peu-communes">Armes Peu Communes</option>
-        <option value="armures">Armures</option>
-        <option value="outils">Outils</option>
-        <option value="minerais">Minerais</option>
-        <option value="parchemins">Parchemins</option>
-        <option value="personnalise">Personnalisé</option>
-      </select>
-    </div>
+  <!-- TAB: Add -->
+  <div class="tab-panel active" data-panel="add">
+    <div class="form">
+      <div class="form-group">
+        <label for="name">Nom du craft *</label>
+        <input type="text" id="name" placeholder="Ex: Épée du Dragon" required />
+      </div>
 
-    <div class="form-group">
-      <label>Ingrédients *</label>
-      <div id="ingredients"></div>
-      <button type="button" class="btn-add" id="add-ing">+ Ajouter un ingrédient</button>
-    </div>
+      <div class="form-group">
+        <label for="category">Catégorie *</label>
+        <select id="category"></select>
+      </div>
 
-    <div class="form-group">
-      <label for="image">Image (optionnel, nom de fichier ou URL)</label>
-      <input type="text" id="image" placeholder="Ex: sword.png" />
-    </div>
+      <div class="form-group">
+        <label>Ingrédients *</label>
+        <div id="ingredients"></div>
+        <button type="button" class="btn-add" id="add-ing">+ Ajouter un ingrédient</button>
+      </div>
 
-    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top: 1.5rem;">
-      <button type="button" class="btn btn-primary" id="save-local">💾 Sauvegarder localement</button>
-      <button type="button" class="btn btn-secondary" id="export-json">📋 Copier JSON</button>
-      <button type="button" class="btn btn-secondary" id="reset-local">🗑️ Effacer locaux</button>
-    </div>
+      <div class="form-group">
+        <label for="image">Image (optionnel)</label>
+        <input type="text" id="image" placeholder="Ex: sword.png" />
+      </div>
 
-    <div class="form-group" style="margin-top:1.5rem;">
-      <label>JSON généré (à coller dans <code>data/crafts.json</code>)</label>
-      <pre class="output" id="output">{ }</pre>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-primary" id="save-local">💾 Ajouter le craft</button>
+        <button type="button" class="btn btn-secondary" id="export-json">📋 Copier JSON seul</button>
+        <button type="button" class="btn btn-secondary" id="clear-form">↺ Réinitialiser</button>
+      </div>
+
+      <div class="form-group" style="margin-top:1.5rem;">
+        <label>JSON généré</label>
+        <pre class="output" id="output">{ }</pre>
+      </div>
     </div>
   </div>
 
-  <div style="max-width:720px; margin: 2rem auto 0;">
-    <h3 style="font-size:1.15rem; margin-bottom:0.75rem;">Mes crafts locaux <span id="local-count" style="color:var(--text-muted); font-size:0.9rem; font-weight:500;"></span></h3>
-    <div id="local-list" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+  <!-- TAB: Manage crafts -->
+  <div class="tab-panel" data-panel="manage">
+    <input type="text" class="search-box" id="manage-search" placeholder="🔍 Rechercher un craft..." />
+    <div id="manage-list"></div>
+  </div>
+
+  <!-- TAB: Categories -->
+  <div class="tab-panel" data-panel="categories">
+    <div style="margin-bottom:1.5rem;">
+      <h3 style="font-size:1.1rem; margin-bottom:0.5rem;">Ajouter une catégorie</h3>
+      <div class="cat-edit-row">
+        <input type="text" class="cat-emoji-input" id="new-cat-icon" placeholder="📦" maxlength="4" />
+        <input type="text" id="new-cat-name" placeholder="Nom affiché" />
+        <input type="text" id="new-cat-slug" placeholder="slug-technique (ex: ma-cat)" />
+        <button class="btn btn-primary" id="add-cat-btn" style="padding:0.5rem 1rem;">+ Ajouter</button>
+      </div>
+    </div>
+
+    <h3 style="font-size:1.1rem; margin-bottom:0.5rem;">Catégories existantes</h3>
+    <div id="cat-list"></div>
   </div>
 </section>
 
@@ -122,15 +202,12 @@ function showAdmin() {
   gateAdminUI();
   initAdmin();
 }
-
 function showLogin() {
   loginSection.style.display = '';
   adminSection.style.display = 'none';
   logoutBtn.style.display = 'none';
 }
-
-if (isAdmin()) showAdmin();
-else showLogin();
+if (isAdmin()) showAdmin(); else showLogin();
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -138,12 +215,8 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const err = document.getElementById('login-error');
   err.textContent = '';
   const ok = await tryLogin(pw);
-  if (ok) {
-    showAdmin();
-  } else {
-    err.textContent = 'Mot de passe incorrect.';
-    document.getElementById('password').value = '';
-  }
+  if (ok) showAdmin();
+  else { err.textContent = 'Mot de passe incorrect.'; document.getElementById('password').value = ''; }
 });
 
 logoutBtn.addEventListener('click', () => {
@@ -152,12 +225,70 @@ logoutBtn.addEventListener('click', () => {
   document.getElementById('password').value = '';
 });
 
-// --- Admin logic (run only after auth) ---
+// --- Utilities ---
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+function slugify(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// --- Admin logic ---
 let adminInitialized = false;
+let allCraftsCache = [];
+
+async function reloadAllCrafts() {
+  allCraftsCache = await loadCrafts({ includeDeleted: true });
+  return allCraftsCache;
+}
+
 function initAdmin() {
   if (adminInitialized) return;
   adminInitialized = true;
 
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelector(`[data-panel="${t.dataset.tab}"]`).classList.add('active');
+      if (t.dataset.tab === 'manage') renderManage();
+      if (t.dataset.tab === 'categories') renderCategories();
+    });
+  });
+
+  initAddTab();
+  populateCategorySelect();
+  reloadAllCrafts();
+  document.getElementById('export-full').onclick = exportFullJSON;
+}
+
+// === TAB: Add ===
+function populateCategorySelect() {
+  const sel = document.getElementById('category');
+  const slugs = allCategorySlugs(allCraftsCache);
+  sel.innerHTML = '';
+  for (const slug of slugs) {
+    const meta = catMeta(slug);
+    const displayName = meta.name && meta.name !== slug ? meta.name
+      : (allCraftsCache.find(c => c.category === slug)?.categoryName || slug);
+    const opt = document.createElement('option');
+    opt.value = slug;
+    opt.textContent = `${meta.icon || '📦'} ${displayName}`;
+    sel.appendChild(opt);
+  }
+}
+
+function initAddTab() {
   const ingContainer = document.getElementById('ingredients');
   const output = document.getElementById('output');
 
@@ -174,21 +305,6 @@ function initAdmin() {
     ingContainer.appendChild(row);
   }
 
-  function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
-
-  function slugify(s) {
-    return s.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-');
-  }
-
-  function getCategoryName(slug) {
-    const sel = document.getElementById('category');
-    return sel.options[sel.selectedIndex].text;
-  }
-
   function buildCraft() {
     const name = document.getElementById('name').value.trim();
     const category = document.getElementById('category').value;
@@ -197,16 +313,13 @@ function initAdmin() {
       qty: parseInt(row.querySelector('.ing-qty').value, 10) || 1,
       name: row.querySelector('.ing-name').value.trim(),
     })).filter(i => i.name);
-
     if (!name) return null;
+    const meta = catMeta(category);
+    const displayName = meta.name && meta.name !== category ? meta.name
+      : (allCraftsCache.find(c => c.category === category)?.categoryName || category);
     return {
       id: `${category}-${slugify(name)}`,
-      name,
-      category,
-      categoryName: getCategoryName(category),
-      image,
-      ingredients,
-      source: 'user',
+      name, category, categoryName: displayName, image, ingredients, source: 'user',
     };
   }
 
@@ -215,66 +328,30 @@ function initAdmin() {
     output.textContent = craft ? JSON.stringify(craft, null, 2) : '{ }';
   }
 
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+  function resetForm() {
+    document.getElementById('name').value = '';
+    document.getElementById('image').value = '';
+    ingContainer.innerHTML = '';
+    addIngredientRow(); addIngredientRow();
+    updateOutput();
   }
 
-  function loadLocal() {
-    try { return JSON.parse(localStorage.getItem('ng_local_crafts') || '[]'); } catch { return []; }
-  }
-  function saveLocal(list) { localStorage.setItem('ng_local_crafts', JSON.stringify(list)); }
-
-  function renderLocalList() {
-    const list = loadLocal();
-    document.getElementById('local-count').textContent = list.length ? `(${list.length})` : '';
-    const container = document.getElementById('local-list');
-    container.innerHTML = '';
-    if (!list.length) {
-      container.innerHTML = '<p style="color:var(--text-dim); font-size:0.9rem;">Aucun craft local. Sauvegardes apparaîtront ici.</p>';
-      return;
-    }
-    for (const c of list) {
-      const div = document.createElement('div');
-      div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);';
-      div.innerHTML = `
-        <div>
-          <strong>${escapeHTML(c.name)}</strong>
-          <span style="color:var(--text-muted); font-size:0.85rem; margin-left:0.5rem;">${escapeHTML(c.categoryName || c.category)}</span>
-        </div>
-        <button class="btn-remove" data-id="${escapeAttr(c.id)}">✕</button>
-      `;
-      div.querySelector('button').onclick = (e) => {
-        const id = e.target.dataset.id;
-        saveLocal(loadLocal().filter(x => x.id !== id));
-        renderLocalList();
-        showToast('Supprimé');
-      };
-      container.appendChild(div);
-    }
-  }
-
-  function escapeHTML(s) {
-    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
-  document.getElementById('add-ing').onclick = () => addIngredientRow();
+  document.getElementById('add-ing').onclick = () => { addIngredientRow(); };
+  document.getElementById('clear-form').onclick = resetForm;
   document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
 
-  document.getElementById('save-local').onclick = () => {
+  document.getElementById('save-local').onclick = async () => {
     const craft = buildCraft();
     if (!craft || !craft.name || !craft.ingredients.length) {
-      showToast('Remplis nom et au moins 1 ingrédient');
-      return;
+      showToast('Remplis nom et au moins 1 ingrédient'); return;
     }
-    const list = loadLocal();
+    const list = lsGet(LS.LOCAL, []);
     const idx = list.findIndex(c => c.id === craft.id);
     if (idx >= 0) list[idx] = craft; else list.push(craft);
-    saveLocal(list);
-    renderLocalList();
-    showToast('✓ Craft sauvegardé localement');
+    lsSet(LS.LOCAL, list);
+    await reloadAllCrafts();
+    showToast('✓ Craft ajouté');
+    resetForm();
   };
 
   document.getElementById('export-json').onclick = async () => {
@@ -283,22 +360,231 @@ function initAdmin() {
     try {
       await navigator.clipboard.writeText(JSON.stringify(craft, null, 2));
       showToast('✓ JSON copié');
-    } catch {
-      showToast('Copie impossible, sélectionne manuellement');
-    }
+    } catch { showToast('Copie impossible'); }
   };
 
-  document.getElementById('reset-local').onclick = () => {
-    if (!confirm('Effacer tous les crafts locaux ?')) return;
-    localStorage.removeItem('ng_local_crafts');
-    renderLocalList();
-    showToast('Crafts locaux effacés');
-  };
-
-  addIngredientRow();
-  addIngredientRow();
+  addIngredientRow(); addIngredientRow();
   updateOutput();
-  renderLocalList();
+}
+
+// === TAB: Manage crafts ===
+async function renderManage() {
+  await reloadAllCrafts();
+  const q = (document.getElementById('manage-search').value || '').trim().toLowerCase();
+  const deleted = getDeletedIds();
+  const filtered = allCraftsCache.filter(c =>
+    !q || c.name.toLowerCase().includes(q) || (c.categoryName || '').toLowerCase().includes(q)
+  );
+
+  const groups = {};
+  for (const c of filtered) (groups[c.category] ||= []).push(c);
+
+  const list = document.getElementById('manage-list');
+  list.innerHTML = '';
+
+  if (!filtered.length) {
+    list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:2rem;">Aucun craft trouvé.</p>';
+    return;
+  }
+
+  for (const slug of Object.keys(groups).sort()) {
+    const meta = catMeta(slug);
+    const header = document.createElement('div');
+    header.className = 'cat-group-head';
+    header.textContent = `${meta.icon || '📦'} ${groups[slug][0].categoryName || slug} · ${groups[slug].length}`;
+    list.appendChild(header);
+
+    for (const c of groups[slug]) {
+      const isDeleted = deleted.has(c.id);
+      const row = document.createElement('div');
+      row.className = 'manage-row';
+      row.style.opacity = isDeleted ? '0.55' : '1';
+      row.innerHTML = `
+        <div class="manage-row-info">
+          <strong>${escapeHTML(c.name)}</strong>
+          <span>${(c.ingredients || []).length} ingrédient(s) · id: <code>${escapeHTML(c.id)}</code></span>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <span class="chip-badge ${isDeleted ? 'chip-deleted' : (c.source === 'user' ? 'chip-user' : 'chip-wiki')}">
+            ${isDeleted ? 'supprimé' : (c.source || 'wiki')}
+          </span>
+          ${isDeleted
+            ? `<button class="btn-restore" data-restore="${escapeAttr(c.id)}">↺ Restaurer</button>`
+            : `<button class="btn-danger" data-delete="${escapeAttr(c.id)}">✕ Supprimer</button>`
+          }
+        </div>
+      `;
+      list.appendChild(row);
+    }
+  }
+
+  list.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.delete;
+      const craft = allCraftsCache.find(c => c.id === id);
+      if (!confirm(`Supprimer « ${craft?.name || id} » ?\n\nIl disparaîtra du site. Exporte crafts.json pour rendre la suppression permanente.`)) return;
+      if (craft?.source === 'user') {
+        // Remove from local storage directly
+        lsSet(LS.LOCAL, lsGet(LS.LOCAL, []).filter(c => c.id !== id));
+      } else {
+        // Add to deleted overrides
+        const del = lsGet(LS.DELETED, []);
+        if (!del.includes(id)) del.push(id);
+        lsSet(LS.DELETED, del);
+      }
+      renderManage();
+      showToast('✓ Craft supprimé');
+    };
+  });
+
+  list.querySelectorAll('[data-restore]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.restore;
+      lsSet(LS.DELETED, lsGet(LS.DELETED, []).filter(x => x !== id));
+      renderManage();
+      showToast('✓ Craft restauré');
+    };
+  });
+}
+
+document.getElementById('manage-search').addEventListener('input', () => {
+  if (document.querySelector('.tab-panel.active').dataset.panel === 'manage') renderManage();
+});
+
+// === TAB: Categories ===
+function renderCategories() {
+  const list = document.getElementById('cat-list');
+  list.innerHTML = '';
+  const slugs = allCategorySlugs(allCraftsCache);
+  const counts = {};
+  for (const c of allCraftsCache) counts[c.category] = (counts[c.category] || 0) + 1;
+  const overrides = getCategoryOverrides();
+  const custom = getCustomCategories();
+
+  for (const slug of slugs) {
+    const base = CATEGORY_META[slug] || custom[slug] || {};
+    const ovr = overrides[slug] || {};
+    const displayName = ovr.name || base.name || allCraftsCache.find(c => c.category === slug)?.categoryName || slug;
+    const icon = ovr.icon || base.icon || '📦';
+    const isCustom = !!custom[slug];
+    const count = counts[slug] || 0;
+
+    const row = document.createElement('div');
+    row.className = 'cat-edit-row';
+    row.innerHTML = `
+      <input type="text" class="cat-emoji-input" value="${escapeAttr(icon)}" data-slug="${escapeAttr(slug)}" data-field="icon" maxlength="4" />
+      <input type="text" value="${escapeAttr(displayName)}" data-slug="${escapeAttr(slug)}" data-field="name" placeholder="Nom affiché" />
+      <div style="color:var(--text-muted); font-size:0.88rem;">
+        <code>${escapeHTML(slug)}</code> · ${count} craft${count > 1 ? 's' : ''}
+        ${isCustom ? ' <span class="chip-badge chip-user" style="margin-left:0.4rem;">custom</span>' : ''}
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        ${Object.keys(ovr).length ? `<button class="btn-restore" data-reset="${escapeAttr(slug)}" title="Annuler les modifs">↺</button>` : ''}
+        ${isCustom && count === 0 ? `<button class="btn-danger" data-del-cat="${escapeAttr(slug)}">✕</button>` : ''}
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  // Listeners
+  list.querySelectorAll('input[data-slug]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const slug = inp.dataset.slug;
+      const field = inp.dataset.field;
+      const val = inp.value.trim();
+      const ovr = getCategoryOverrides();
+      ovr[slug] = ovr[slug] || {};
+      if (CATEGORY_META[slug]?.[field] === val || (getCustomCategories()[slug]?.[field] === val)) {
+        delete ovr[slug][field];
+      } else {
+        ovr[slug][field] = val;
+      }
+      if (!Object.keys(ovr[slug]).length) delete ovr[slug];
+      lsSet(LS.CAT_OVERRIDE, ovr);
+      showToast('✓ Catégorie mise à jour');
+      populateCategorySelect();
+    });
+  });
+
+  list.querySelectorAll('[data-reset]').forEach(btn => {
+    btn.onclick = () => {
+      const slug = btn.dataset.reset;
+      const ovr = getCategoryOverrides();
+      delete ovr[slug];
+      lsSet(LS.CAT_OVERRIDE, ovr);
+      renderCategories();
+      populateCategorySelect();
+      showToast('↺ Modifs annulées');
+    };
+  });
+
+  list.querySelectorAll('[data-del-cat]').forEach(btn => {
+    btn.onclick = () => {
+      const slug = btn.dataset['del-cat'] || btn.dataset.delCat;
+      if (!confirm(`Supprimer la catégorie « ${slug} » ?`)) return;
+      const cc = getCustomCategories();
+      delete cc[slug];
+      lsSet(LS.CUSTOM_CATS, cc);
+      renderCategories();
+      populateCategorySelect();
+      showToast('✓ Catégorie supprimée');
+    };
+  });
+}
+
+document.getElementById('add-cat-btn').onclick = () => {
+  const name = document.getElementById('new-cat-name').value.trim();
+  const slugRaw = document.getElementById('new-cat-slug').value.trim();
+  const icon = document.getElementById('new-cat-icon').value.trim() || '📦';
+  const slug = slugify(slugRaw || name);
+  if (!name || !slug) { showToast('Remplis nom + slug'); return; }
+  if (CATEGORY_META[slug] || getCustomCategories()[slug]) {
+    showToast('Cette catégorie existe déjà'); return;
+  }
+  const cc = getCustomCategories();
+  cc[slug] = { name, icon, color: '#94a3b8', desc: '' };
+  lsSet(LS.CUSTOM_CATS, cc);
+  document.getElementById('new-cat-name').value = '';
+  document.getElementById('new-cat-slug').value = '';
+  document.getElementById('new-cat-icon').value = '';
+  renderCategories();
+  populateCategorySelect();
+  showToast('✓ Catégorie ajoutée');
+};
+
+// === Export full JSON ===
+async function exportFullJSON() {
+  // Build final crafts.json: wiki (minus deleted) + local + overrides applied.
+  const res = await fetch('data/crafts.json?_=' + Date.now());
+  const wiki = await res.json();
+  const local = lsGet(LS.LOCAL, []);
+  const deleted = getDeletedIds();
+  const catOverrides = getCategoryOverrides();
+
+  const out = [...wiki, ...local]
+    .filter(c => !deleted.has(c.id))
+    .map(c => {
+      const o = catOverrides[c.category];
+      if (o?.name) return { ...c, categoryName: o.name };
+      return c;
+    });
+
+  const json = JSON.stringify(out, null, 2);
+
+  // Try clipboard, fall back to download.
+  try {
+    await navigator.clipboard.writeText(json);
+    showToast(`✓ ${out.length} crafts copiés dans le presse-papier`);
+  } catch {
+    // Download fallback
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'crafts.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast(`✓ ${out.length} crafts téléchargés`);
+  }
 }
 </script>
 </body>
