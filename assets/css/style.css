@@ -298,6 +298,7 @@ input, select { font-family: inherit; }
   background: linear-gradient(135deg, transparent 0%, var(--cat-color, var(--accent)) 100%);
   opacity: 0.05;
   transition: opacity 0.2s;
+  pointer-events: none;
 }
 .cat-card:hover {
   border-color: var(--cat-color, var(--accent));
