@@ -88,16 +88,7 @@ function render(c, all) {
 
     <section>
       <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Recette</h2>
-      ${ingredients.length ? `
-        <ul class="detail-ing-list">
-          ${ingredients.map(i => `
-            <li class="detail-ing-item">
-              <span class="detail-ing-qty">${i.qty}×</span>
-              <span>${escapeHTML(i.name)}</span>
-            </li>
-          `).join('')}
-        </ul>
-      ` : '<p style="color: var(--text-muted);">Aucun ingrédient renseigné.</p>'}
+      ${renderRecipe(c)}
     </section>
 
     ${related.length ? `
@@ -113,6 +104,80 @@ function render(c, all) {
     for (const r of related) relatedGrid.appendChild(renderCraftCard(r));
   }
 }
+
+// Build the visual 3x3 crafting table when slots are defined, else fall back to list.
+function renderRecipe(c) {
+  const ings = c.ingredients || [];
+  if (!ings.length) return '<p style="color: var(--text-muted);">Aucun ingrédient renseigné.</p>';
+
+  const hasSlots = ings.some(i => typeof i.slot === 'number' && i.slot >= 0 && i.slot <= 8);
+  if (!hasSlots) {
+    return `
+      <ul class="detail-ing-list">
+        ${ings.map(i => `
+          <li class="detail-ing-item">
+            <span class="detail-ing-qty">${i.qty}×</span>
+            <span>${escapeHTML(i.name)}</span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  }
+
+  const grid = Array(9).fill(null);
+  for (const i of ings) {
+    if (typeof i.slot === 'number' && i.slot >= 0 && i.slot <= 8 && !grid[i.slot]) {
+      grid[i.slot] = i;
+    }
+  }
+
+  const outputQty = c.outputQty || 1;
+  const outputIcon = c.outputIcon || c.image || '';
+
+  return `
+    <div class="craft-table-wrap">
+      <div class="craft-grid">
+        ${grid.map(i => renderSlot(i)).join('')}
+      </div>
+      <div class="craft-arrow">➤</div>
+      <div class="craft-output-wrap">
+        <div class="craft-output-label">Résultat</div>
+        <div class="craft-output" data-tooltip="${escapeAttr(c.name)}">
+          ${outputIcon
+            ? `<img src="${escapeAttr(resolveIcon(outputIcon))}" alt="${escapeAttr(c.name)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:${JSON.stringify(c.name)},className:'slot-label'}))" />`
+            : `<span class="slot-label">${escapeHTML(c.name)}</span>`
+          }
+          ${outputQty > 1 ? `<span class="slot-qty">${outputQty}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSlot(ing) {
+  if (!ing) return '<div class="craft-slot empty"></div>';
+  const icon = ing.icon ? resolveIcon(ing.icon) : '';
+  const name = ing.name || '';
+  const qty = ing.qty || 1;
+  return `
+    <div class="craft-slot" data-tooltip="${escapeAttr(qty + '× ' + name)}">
+      ${icon
+        ? `<img src="${escapeAttr(icon)}" alt="${escapeAttr(name)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:${JSON.stringify(name)},className:'slot-label'}))" />`
+        : `<span class="slot-label">${escapeHTML(name)}</span>`
+      }
+      ${qty > 1 ? `<span class="slot-qty">${qty}</span>` : ''}
+    </div>
+  `;
+}
+
+function resolveIcon(v) {
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v) || v.startsWith('data:') || v.startsWith('/')) return v;
+  // Bare filename — look under assets/icons/
+  return `assets/icons/${v}`;
+}
+
+function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
 
 function renderCraftCard(c) {
   const meta = catMeta(c.category);

@@ -152,6 +152,35 @@
       </div>
 
       <div class="form-group">
+        <label>Mode de recette</label>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; font-size:0.9rem;">
+          <label style="display:flex; gap:0.4rem; align-items:center; cursor:pointer;">
+            <input type="radio" name="recipe-mode" value="grid" checked /> Grille 3×3 (visuel Minecraft)
+          </label>
+          <label style="display:flex; gap:0.4rem; align-items:center; cursor:pointer;">
+            <input type="radio" name="recipe-mode" value="list" /> Liste simple (sans position)
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" id="grid-mode-wrap">
+        <label>Recette *</label>
+        <div class="grid-editor-row">
+          <div class="craft-grid-editor" id="grid-editor"></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:0.35rem;">
+            <span style="font-size:1.5rem; color:var(--accent);">➤</span>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Résultat</div>
+            <div class="grid-editor-output">
+              <input type="text" id="output-name" placeholder="Nom résultat" disabled title="Auto: nom du craft" />
+              <input type="number" id="output-qty" value="1" min="1" placeholder="Qté" />
+              <input type="text" id="output-icon" placeholder="icon.png (opt.)" style="font-size:0.6rem;" />
+            </div>
+          </div>
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Remplis les slots où il y a un ingrédient (laisse vide sinon). L'icône est optionnelle — si renseignée, elle s'affiche dans la grille.</p>
+      </div>
+
+      <div class="form-group" id="list-mode-wrap" style="display:none;">
         <label>Ingrédients *</label>
         <div id="ingredients"></div>
         <button type="button" class="btn-add" id="add-ing">+ Ajouter un ingrédient</button>
@@ -307,8 +336,36 @@ function populateCategorySelect() {
 
 function initAddTab() {
   const ingContainer = document.getElementById('ingredients');
+  const gridEditor = document.getElementById('grid-editor');
   const output = document.getElementById('output');
+  const gridWrap = document.getElementById('grid-mode-wrap');
+  const listWrap = document.getElementById('list-mode-wrap');
 
+  // --- Build 9 grid editor slots once ---
+  function buildGridEditor() {
+    gridEditor.innerHTML = '';
+    for (let s = 0; s < 9; s++) {
+      const slot = document.createElement('div');
+      slot.className = 'editor-slot';
+      slot.dataset.slot = String(s);
+      slot.innerHTML = `
+        <input type="text" class="slot-name" placeholder="item" data-slot="${s}" />
+        <input type="text" class="slot-icon" placeholder="icon.png" data-slot="${s}" />
+        <input type="number" class="slot-qty" min="1" value="1" data-slot="${s}" />
+      `;
+      slot.querySelectorAll('input').forEach(i => i.addEventListener('input', updateOutput));
+      gridEditor.appendChild(slot);
+    }
+  }
+
+  function clearGridEditor() {
+    gridEditor.querySelectorAll('.slot-name, .slot-icon').forEach(i => i.value = '');
+    gridEditor.querySelectorAll('.slot-qty').forEach(i => i.value = '1');
+    document.getElementById('output-qty').value = '1';
+    document.getElementById('output-icon').value = '';
+  }
+
+  // --- List mode row (legacy, kept for users who prefer it) ---
   function addIngredientRow(qty = '', name = '') {
     const row = document.createElement('div');
     row.className = 'ing-row';
@@ -322,24 +379,62 @@ function initAddTab() {
     ingContainer.appendChild(row);
   }
 
+  function currentMode() {
+    const sel = document.querySelector('input[name="recipe-mode"]:checked');
+    return sel ? sel.value : 'grid';
+  }
+
+  function applyMode(mode) {
+    gridWrap.style.display = mode === 'grid' ? '' : 'none';
+    listWrap.style.display = mode === 'list' ? '' : 'none';
+  }
+
+  // Read ingredients from whichever mode is active.
+  function readIngredients(mode) {
+    if (mode === 'grid') {
+      const ings = [];
+      for (let s = 0; s < 9; s++) {
+        const cell = gridEditor.querySelector(`.editor-slot[data-slot="${s}"]`);
+        if (!cell) continue;
+        const name = cell.querySelector('.slot-name').value.trim();
+        if (!name) continue;
+        const icon = cell.querySelector('.slot-icon').value.trim();
+        const qty = parseInt(cell.querySelector('.slot-qty').value, 10) || 1;
+        const ing = { slot: s, qty, name };
+        if (icon) ing.icon = icon;
+        ings.push(ing);
+      }
+      return ings;
+    }
+    return Array.from(ingContainer.querySelectorAll('.ing-row')).map(row => ({
+      qty: parseInt(row.querySelector('.ing-qty').value, 10) || 1,
+      name: row.querySelector('.ing-name').value.trim(),
+    })).filter(i => i.name);
+  }
+
   function buildCraft() {
     const name = document.getElementById('name').value.trim();
     const category = document.getElementById('category').value;
     const image = document.getElementById('image').value.trim() || null;
-    const ingredients = Array.from(ingContainer.querySelectorAll('.ing-row')).map(row => ({
-      qty: parseInt(row.querySelector('.ing-qty').value, 10) || 1,
-      name: row.querySelector('.ing-name').value.trim(),
-    })).filter(i => i.name);
+    const mode = currentMode();
+    const ingredients = readIngredients(mode);
     if (!name) return null;
     const meta = catMeta(category);
     const displayName = meta.name && meta.name !== category ? meta.name
       : (allCraftsCache.find(c => c.category === category)?.categoryName || category);
     // Preserve the original id when editing so the override replaces the right row.
     const id = editingId || `${category}-${slugify(name)}`;
-    return {
+    const craft = {
       id,
       name, category, categoryName: displayName, image, ingredients, source: 'user',
     };
+    if (mode === 'grid') {
+      const outQty = parseInt(document.getElementById('output-qty').value, 10) || 1;
+      const outIcon = document.getElementById('output-icon').value.trim();
+      if (outQty > 1) craft.outputQty = outQty;
+      if (outIcon) craft.outputIcon = outIcon;
+    }
+    return craft;
   }
 
   function updateOutput() {
@@ -352,6 +447,10 @@ function initAddTab() {
     document.getElementById('image').value = '';
     ingContainer.innerHTML = '';
     addIngredientRow(); addIngredientRow();
+    clearGridEditor();
+    // Default back to grid mode on reset.
+    const gridRadio = document.querySelector('input[name="recipe-mode"][value="grid"]');
+    if (gridRadio) { gridRadio.checked = true; applyMode('grid'); }
     exitEditMode();
     updateOutput();
   }
@@ -377,10 +476,34 @@ function initAddTab() {
       sel.appendChild(opt);
     }
     sel.value = craft.category;
-    ingContainer.innerHTML = '';
+
     const ings = craft.ingredients || [];
+    const hasSlots = ings.some(i => typeof i.slot === 'number' && i.slot >= 0 && i.slot <= 8);
+    const mode = hasSlots ? 'grid' : 'list';
+    const radio = document.querySelector(`input[name="recipe-mode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+    applyMode(mode);
+
+    // Populate list mode (always, so switching shows something).
+    ingContainer.innerHTML = '';
     if (!ings.length) { addIngredientRow(); }
     else { for (const i of ings) addIngredientRow(i.qty, i.name); }
+
+    // Populate grid mode.
+    clearGridEditor();
+    if (hasSlots) {
+      for (const i of ings) {
+        if (typeof i.slot !== 'number' || i.slot < 0 || i.slot > 8) continue;
+        const cell = gridEditor.querySelector(`.editor-slot[data-slot="${i.slot}"]`);
+        if (!cell) continue;
+        cell.querySelector('.slot-name').value = i.name || '';
+        cell.querySelector('.slot-qty').value = i.qty || 1;
+        cell.querySelector('.slot-icon').value = i.icon || '';
+      }
+      document.getElementById('output-qty').value = craft.outputQty || 1;
+      document.getElementById('output-icon').value = craft.outputIcon || '';
+    }
+
     document.getElementById('edit-banner').style.display = '';
     document.getElementById('edit-banner-name').textContent = craft.name;
     document.getElementById('save-local').textContent = '💾 Enregistrer les modifications';
@@ -390,10 +513,17 @@ function initAddTab() {
     updateOutput();
   };
 
+  // Radio mode switch
+  document.querySelectorAll('input[name="recipe-mode"]').forEach(r => {
+    r.addEventListener('change', () => { applyMode(currentMode()); updateOutput(); });
+  });
+
   document.getElementById('cancel-edit').onclick = resetForm;
   document.getElementById('add-ing').onclick = () => { addIngredientRow(); };
   document.getElementById('clear-form').onclick = resetForm;
   document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
+  document.getElementById('output-qty').addEventListener('input', updateOutput);
+  document.getElementById('output-icon').addEventListener('input', updateOutput);
 
   document.getElementById('save-local').onclick = async () => {
     const craft = buildCraft();
@@ -423,7 +553,10 @@ function initAddTab() {
     } catch { showToast('Copie impossible'); }
   };
 
+  // Initial setup
+  buildGridEditor();
   addIngredientRow(); addIngredientRow();
+  applyMode(currentMode());
   updateOutput();
 }
 
