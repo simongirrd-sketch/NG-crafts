@@ -131,6 +131,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="add">➕ Ajouter</button>
     <button class="tab" data-tab="manage">📋 Gérer les crafts</button>
+    <button class="tab" data-tab="items">📦 Items</button>
     <button class="tab" data-tab="categories">🏷️ Catégories</button>
   </div>
 
@@ -214,6 +215,49 @@
     </div>
   </div>
 
+  <!-- TAB: Items -->
+  <div class="tab-panel" data-panel="items">
+    <div class="form">
+      <div id="item-edit-banner" class="edit-banner" style="display:none;">
+        <span>✎ Modification de <strong id="item-edit-banner-name"></strong></span>
+        <button type="button" class="btn btn-secondary" id="item-cancel-edit" style="padding:0.35rem 0.75rem; font-size:0.85rem;">Annuler</button>
+      </div>
+      <div class="form-group">
+        <label for="item-name">Nom de l'item *</label>
+        <input type="text" id="item-name" placeholder="Ex: Manche d'épée" required />
+      </div>
+      <div class="form-group">
+        <label for="item-image">Image (optionnel)</label>
+        <input type="text" id="item-image" placeholder="Ex: manche.png (dans assets/icons/)" />
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <div style="display:flex; gap:1.25rem; flex-wrap:wrap; font-size:0.9rem;">
+          <label style="display:flex; gap:0.4rem; align-items:center; cursor:pointer;">
+            <input type="radio" name="item-type" value="base" checked /> Item de base
+          </label>
+          <label style="display:flex; gap:0.4rem; align-items:center; cursor:pointer;">
+            <input type="radio" name="item-type" value="composite" /> Sous-partie (composé d'autres items)
+          </label>
+        </div>
+      </div>
+      <div class="form-group" id="item-parts-wrap" style="display:none;">
+        <label>Composition *</label>
+        <div id="item-parts"></div>
+        <button type="button" class="btn-add" id="add-item-part">+ Ajouter un composant</button>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Liste les items nécessaires pour obtenir cette sous-partie (quantité + nom).</p>
+      </div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1.5rem;">
+        <button type="button" class="btn btn-primary" id="save-item">💾 Ajouter l'item</button>
+        <button type="button" class="btn btn-secondary" id="clear-item">↺ Réinitialiser</button>
+      </div>
+    </div>
+
+    <h3 style="font-size:1.1rem; margin:2rem 0 0.5rem;">Items existants</h3>
+    <input type="text" class="search-box" id="items-search" placeholder="🔍 Rechercher un item..." />
+    <div id="items-list"></div>
+  </div>
+
   <!-- TAB: Categories -->
   <div class="tab-panel" data-panel="categories">
     <div style="margin-bottom:1.5rem;">
@@ -237,8 +281,8 @@
   <p>Guide complet dans le <a href="README.md">README</a></p>
 </footer>
 
-<script src="assets/js/auth.js"></script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js?v=2"></script>
+<script src="assets/js/data.js?v=2"></script>
 <script>
 // --- Admin state (declared early so initAdmin can access them) ---
 let adminInitialized = false;
@@ -308,11 +352,13 @@ function initAdmin() {
       t.classList.add('active');
       document.querySelector(`[data-panel="${t.dataset.tab}"]`).classList.add('active');
       if (t.dataset.tab === 'manage') renderManage();
+      if (t.dataset.tab === 'items') renderItems();
       if (t.dataset.tab === 'categories') renderCategories();
     });
   });
 
   initAddTab();
+  initItemsTab();
   populateCategorySelect();
   reloadAllCrafts();
   document.getElementById('export-full').onclick = exportFullJSON;
@@ -680,6 +726,178 @@ document.getElementById('toggle-trash').onclick = () => {
 document.getElementById('manage-search').addEventListener('input', () => {
   if (document.querySelector('.tab-panel.active').dataset.panel === 'manage') renderManage();
 });
+
+// === TAB: Items ===
+let editingItemId = null;
+
+function initItemsTab() {
+  const partsContainer = document.getElementById('item-parts');
+  const partsWrap = document.getElementById('item-parts-wrap');
+
+  function addPartRow(qty = '', name = '') {
+    const row = document.createElement('div');
+    row.className = 'ing-row';
+    row.innerHTML = `
+      <input type="number" placeholder="Qté" class="part-qty" min="1" value="${qty}" />
+      <input type="text" placeholder="Nom du composant" class="part-name" value="${escapeAttr(name)}" />
+      <button type="button" class="btn-remove">✕</button>
+    `;
+    row.querySelector('.btn-remove').onclick = () => row.remove();
+    partsContainer.appendChild(row);
+  }
+
+  function currentItemType() {
+    return document.querySelector('input[name="item-type"]:checked')?.value || 'base';
+  }
+
+  function applyItemType(type) {
+    partsWrap.style.display = type === 'composite' ? '' : 'none';
+  }
+
+  function resetItemForm() {
+    document.getElementById('item-name').value = '';
+    document.getElementById('item-image').value = '';
+    partsContainer.innerHTML = '';
+    addPartRow(); addPartRow();
+    const baseRadio = document.querySelector('input[name="item-type"][value="base"]');
+    if (baseRadio) baseRadio.checked = true;
+    applyItemType('base');
+    editingItemId = null;
+    document.getElementById('item-edit-banner').style.display = 'none';
+    document.getElementById('save-item').textContent = '💾 Ajouter l\'item';
+  }
+
+  function buildItem() {
+    const name = document.getElementById('item-name').value.trim();
+    if (!name) return null;
+    const image = document.getElementById('item-image').value.trim() || null;
+    const type = currentItemType();
+    const id = editingItemId || slugify(name);
+    const item = { id, name, image, type };
+    if (type === 'composite') {
+      item.parts = Array.from(partsContainer.querySelectorAll('.ing-row')).map(row => ({
+        qty: parseInt(row.querySelector('.part-qty').value, 10) || 1,
+        name: row.querySelector('.part-name').value.trim(),
+      })).filter(p => p.name);
+    }
+    return item;
+  }
+
+  // Exposed so renderItems() can trigger edit mode.
+  window.startEditItem = (item) => {
+    editingItemId = item.id;
+    document.getElementById('item-name').value = item.name || '';
+    document.getElementById('item-image').value = item.image || '';
+    const radio = document.querySelector(`input[name="item-type"][value="${item.type || 'base'}"]`);
+    if (radio) radio.checked = true;
+    applyItemType(item.type || 'base');
+    partsContainer.innerHTML = '';
+    if (item.type === 'composite' && item.parts && item.parts.length) {
+      for (const p of item.parts) addPartRow(p.qty, p.name);
+    } else {
+      addPartRow(); addPartRow();
+    }
+    document.getElementById('item-edit-banner').style.display = '';
+    document.getElementById('item-edit-banner-name').textContent = item.name;
+    document.getElementById('save-item').textContent = '💾 Enregistrer les modifications';
+    // Switch to the Items tab.
+    document.querySelector('.tab[data-tab="items"]').click();
+    document.getElementById('item-name').focus();
+  };
+
+  document.querySelectorAll('input[name="item-type"]').forEach(r => {
+    r.addEventListener('change', () => applyItemType(currentItemType()));
+  });
+  document.getElementById('add-item-part').onclick = () => addPartRow();
+  document.getElementById('clear-item').onclick = resetItemForm;
+  document.getElementById('item-cancel-edit').onclick = resetItemForm;
+
+  document.getElementById('save-item').onclick = () => {
+    const item = buildItem();
+    if (!item) { showToast('Le nom est requis'); return; }
+    if (item.type === 'composite' && (!item.parts || !item.parts.length)) {
+      showToast('Ajoute au moins un composant'); return;
+    }
+    const wasEditing = !!editingItemId;
+    const list = lsGet(LS.ITEMS, []);
+    const idx = list.findIndex(x => x.id === item.id);
+    if (idx >= 0) list[idx] = item; else list.push(item);
+    lsSet(LS.ITEMS, list);
+    showToast(wasEditing ? '✓ Item modifié' : '✓ Item ajouté');
+    resetItemForm();
+    renderItems();
+  };
+
+  document.getElementById('items-search').addEventListener('input', () => {
+    if (document.querySelector('.tab-panel.active').dataset.panel === 'items') renderItems();
+  });
+
+  addPartRow(); addPartRow();
+  applyItemType('base');
+}
+
+function renderItems() {
+  const listEl = document.getElementById('items-list');
+  const q = (document.getElementById('items-search').value || '').trim().toLowerCase();
+  const items = lsGet(LS.ITEMS, []);
+  const filtered = items.filter(i => !q || i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q));
+  listEl.innerHTML = '';
+  if (!filtered.length) {
+    listEl.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:2rem;">Aucun item pour l\'instant.</p>';
+    return;
+  }
+  // Group by type
+  const bases = filtered.filter(i => i.type !== 'composite');
+  const comps = filtered.filter(i => i.type === 'composite');
+  const section = (title, arr) => {
+    if (!arr.length) return;
+    const h = document.createElement('div');
+    h.className = 'cat-group-head';
+    h.textContent = `${title} · ${arr.length}`;
+    listEl.appendChild(h);
+    for (const item of arr) {
+      const row = document.createElement('div');
+      row.className = 'manage-row';
+      const partsDesc = item.type === 'composite'
+        ? `${(item.parts || []).length} composant${(item.parts || []).length > 1 ? 's' : ''}`
+        : 'item de base';
+      row.innerHTML = `
+        <div class="manage-row-info">
+          <strong>${escapeHTML(item.name)}</strong>
+          <span>${partsDesc}${item.image ? ' · 🖼️ ' + escapeHTML(item.image) : ''} · id: <code>${escapeHTML(item.id)}</code></span>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <span class="chip-badge ${item.type === 'composite' ? 'chip-user' : 'chip-wiki'}">${item.type === 'composite' ? 'sous-partie' : 'base'}</span>
+          <button class="btn-edit" data-edit-item="${escapeAttr(item.id)}">✎ Modifier</button>
+          <button class="btn-danger" data-delete-item="${escapeAttr(item.id)}">✕ Supprimer</button>
+        </div>
+      `;
+      listEl.appendChild(row);
+    }
+  };
+  section('📦 Items de base', bases);
+  section('🧩 Sous-parties', comps);
+
+  listEl.querySelectorAll('[data-edit-item]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.editItem;
+      const item = lsGet(LS.ITEMS, []).find(x => x.id === id);
+      if (!item) { showToast('Item introuvable'); return; }
+      window.startEditItem(item);
+    };
+  });
+  listEl.querySelectorAll('[data-delete-item]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.deleteItem;
+      const all = lsGet(LS.ITEMS, []);
+      const target = all.find(x => x.id === id);
+      if (!confirm(`Supprimer l'item « ${target?.name || id} » ?`)) return;
+      lsSet(LS.ITEMS, all.filter(x => x.id !== id));
+      renderItems();
+      showToast('✓ Item supprimé');
+    };
+  });
+}
 
 // === TAB: Categories ===
 function renderCategories() {

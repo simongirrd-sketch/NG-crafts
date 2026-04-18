@@ -16,6 +16,7 @@ const LS = {
   DELETED: 'ng_deleted_ids',      // array of craft ids hidden/removed
   CAT_OVERRIDE: 'ng_cat_overrides', // { slug: {name, icon, color, desc} }
   CUSTOM_CATS: 'ng_custom_cats',    // { slug: {name, icon, color, desc} } for brand-new cats
+  ITEMS: 'ng_items',                 // [{ id, name, image, type: 'base'|'composite', parts?: [{qty,name}] }]
 };
 
 function lsGet(key, fallback) {
