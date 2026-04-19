@@ -367,6 +367,9 @@
   </div>
 </section>
 
+<!-- Shared datalist: auto-complete source for every ingredient/component input. -->
+<datalist id="known-items"></datalist>
+
 <div class="toast" id="toast">✓ Sauvegardé</div>
 
 <footer>
@@ -424,6 +427,17 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Refreshes the shared <datalist id="known-items"> options from the saved items.
+// Inputs with list="known-items" automatically get a native dropdown + free typing.
+function refreshKnownItems() {
+  const dl = document.getElementById('known-items');
+  if (!dl) return;
+  const items = lsGet(LS.ITEMS, []);
+  // Dedupe names, keep order by last-added
+  const names = [...new Set(items.map(i => i.name).filter(Boolean))];
+  dl.innerHTML = names.map(n => `<option value="${escapeAttr(n)}"></option>`).join('');
 }
 
 // --- Image drop zone: wraps an existing text input so the user can either
@@ -544,6 +558,7 @@ function initAdmin() {
   initItemsTab();
   populateCategorySelect();
   reloadAllCrafts();
+  refreshKnownItems();
   document.getElementById('export-full').onclick = exportFullJSON;
 }
 
@@ -578,7 +593,7 @@ function initAddTab() {
       slot.className = 'editor-slot';
       slot.dataset.slot = String(s);
       slot.innerHTML = `
-        <input type="text" class="slot-name" placeholder="item" data-slot="${s}" />
+        <input type="text" class="slot-name" placeholder="item" list="known-items" data-slot="${s}" />
         <input type="text" class="slot-icon" placeholder="icon.png" data-slot="${s}" />
         <input type="number" class="slot-qty" min="1" value="1" data-slot="${s}" />
       `;
@@ -600,7 +615,7 @@ function initAddTab() {
     row.className = 'ing-row';
     row.innerHTML = `
       <input type="number" placeholder="Qté" class="ing-qty" min="1" value="${qty}" />
-      <input type="text" placeholder="Nom de l'ingrédient" class="ing-name" value="${escapeAttr(name)}" />
+      <input type="text" placeholder="Nom de l'ingrédient" class="ing-name" list="known-items" value="${escapeAttr(name)}" />
       <button type="button" class="btn-remove">✕</button>
     `;
     row.querySelector('.btn-remove').onclick = () => { row.remove(); updateOutput(); };
@@ -960,7 +975,7 @@ function initItemsTab() {
     row.className = 'ing-row';
     row.innerHTML = `
       <input type="number" placeholder="Qté" class="part-qty" min="1" value="${qty}" />
-      <input type="text" placeholder="Nom du composant" class="part-name" value="${escapeAttr(name)}" />
+      <input type="text" placeholder="Nom du composant" class="part-name" list="known-items" value="${escapeAttr(name)}" />
       <button type="button" class="btn-remove">✕</button>
     `;
     row.querySelector('.btn-remove').onclick = () => row.remove();
@@ -1068,6 +1083,7 @@ function initItemsTab() {
     const idx = list.findIndex(x => x.id === item.id);
     if (idx >= 0) list[idx] = item; else list.push(item);
     lsSet(LS.ITEMS, list);
+    refreshKnownItems();
     showToast(wasEditing ? '✓ Item modifié' : '✓ Item ajouté');
     resetItemForm();
     renderItems();
@@ -1139,6 +1155,7 @@ function renderItems() {
       const target = all.find(x => x.id === id);
       if (!confirm(`Supprimer l'item « ${target?.name || id} » ?`)) return;
       lsSet(LS.ITEMS, all.filter(x => x.id !== id));
+      refreshKnownItems();
       renderItems();
       showToast('✓ Item supprimé');
     };
@@ -1214,6 +1231,7 @@ function renderItemsList() {
       const target = list.find(x => x.id === id);
       if (!confirm(`Supprimer l'item « ${target?.name || id} » ?`)) return;
       lsSet(LS.ITEMS, list.filter(x => x.id !== id));
+      refreshKnownItems();
       renderItemsList();
       showToast('✓ Item supprimé');
     };
