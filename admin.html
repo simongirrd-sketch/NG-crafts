@@ -148,6 +148,12 @@
       </div>
 
       <div class="form-group">
+        <label for="craft-id">ID <span style="color:var(--text-muted); font-weight:400; font-size:0.85rem;">(laisse vide pour auto-générer depuis nom + catégorie)</span></label>
+        <input type="text" id="craft-id" placeholder="auto" />
+        <p id="craft-id-hint" style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem; font-family:var(--font-mono);"></p>
+      </div>
+
+      <div class="form-group">
         <label for="category">Catégorie *</label>
         <select id="category"></select>
       </div>
@@ -225,6 +231,11 @@
       <div class="form-group">
         <label for="item-name">Nom de l'item *</label>
         <input type="text" id="item-name" placeholder="Ex: Manche d'épée" required />
+      </div>
+      <div class="form-group">
+        <label for="item-id">ID <span style="color:var(--text-muted); font-weight:400; font-size:0.85rem;">(laisse vide pour auto-générer depuis le nom)</span></label>
+        <input type="text" id="item-id" placeholder="auto" />
+        <p id="item-id-hint" style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem; font-family:var(--font-mono);"></p>
       </div>
       <div class="form-group">
         <label for="item-image">Image (optionnel)</label>
@@ -325,7 +336,7 @@ function escapeHTML(s) {
 function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
 function slugify(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+    .replace(/[^a-z0-9\s\-_]/g, '').trim().replace(/\s+/g, '-');
 }
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -458,6 +469,25 @@ function initAddTab() {
     })).filter(i => i.name);
   }
 
+  function autoCraftId(name, category) {
+    return `${category}-${slugify(name)}`;
+  }
+  function currentCraftId() {
+    const manual = document.getElementById('craft-id').value.trim();
+    if (manual) return slugify(manual);
+    const name = document.getElementById('name').value.trim();
+    const category = document.getElementById('category').value;
+    if (!name || !category) return '';
+    return autoCraftId(name, category);
+  }
+  function refreshCraftIdHint() {
+    const hint = document.getElementById('craft-id-hint');
+    const manual = document.getElementById('craft-id').value.trim();
+    const id = currentCraftId();
+    if (!id) { hint.textContent = ''; return; }
+    hint.textContent = manual ? `→ ${slugify(manual)}` : `auto → ${id}`;
+  }
+
   function buildCraft() {
     const name = document.getElementById('name').value.trim();
     const category = document.getElementById('category').value;
@@ -468,8 +498,9 @@ function initAddTab() {
     const meta = catMeta(category);
     const displayName = meta.name && meta.name !== category ? meta.name
       : (allCraftsCache.find(c => c.category === category)?.categoryName || category);
-    // Preserve the original id when editing so the override replaces the right row.
-    const id = editingId || `${category}-${slugify(name)}`;
+    // Manual id wins, then editingId (preserve), then auto.
+    const manual = document.getElementById('craft-id').value.trim();
+    const id = manual ? slugify(manual) : (editingId || autoCraftId(name, category));
     const craft = {
       id,
       name, category, categoryName: displayName, image, ingredients, source: 'user',
@@ -490,6 +521,7 @@ function initAddTab() {
 
   function resetForm() {
     document.getElementById('name').value = '';
+    document.getElementById('craft-id').value = '';
     document.getElementById('image').value = '';
     ingContainer.innerHTML = '';
     addIngredientRow(); addIngredientRow();
@@ -511,6 +543,7 @@ function initAddTab() {
   window.startEditCraft = (craft) => {
     editingId = craft.id;
     document.getElementById('name').value = craft.name || '';
+    document.getElementById('craft-id').value = craft.id || '';
     document.getElementById('image').value = craft.image || '';
     // Make sure the category option exists (user may have just added a category).
     populateCategorySelect();
@@ -557,6 +590,7 @@ function initAddTab() {
     document.querySelector('.tab[data-tab="add"]').click();
     document.getElementById('name').focus();
     updateOutput();
+    refreshCraftIdHint();
   };
 
   // Radio mode switch
@@ -567,7 +601,8 @@ function initAddTab() {
   document.getElementById('cancel-edit').onclick = resetForm;
   document.getElementById('add-ing').onclick = () => { addIngredientRow(); };
   document.getElementById('clear-form').onclick = resetForm;
-  document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', updateOutput));
+  document.querySelectorAll('#name, #category, #image').forEach(el => el.addEventListener('input', () => { updateOutput(); refreshCraftIdHint(); }));
+  document.getElementById('craft-id').addEventListener('input', () => { updateOutput(); refreshCraftIdHint(); });
   document.getElementById('output-qty').addEventListener('input', updateOutput);
   document.getElementById('output-icon').addEventListener('input', updateOutput);
 
@@ -577,7 +612,19 @@ function initAddTab() {
       showToast('Remplis nom et au moins 1 ingrédient'); return;
     }
     const wasEditing = !!editingId;
-    const list = lsGet(LS.LOCAL, []);
+    const idChanged = wasEditing && craft.id !== editingId;
+    let list = lsGet(LS.LOCAL, []);
+    // If id changed during an edit, drop the old local entry and add the old wiki id to deleted.
+    if (idChanged) {
+      list = list.filter(c => c.id !== editingId);
+      const wasWiki = !list.some(c => c.id === editingId) &&
+                       allCraftsCache.some(c => c.id === editingId && c.source !== 'user');
+      if (wasWiki) {
+        const del = lsGet(LS.DELETED, []);
+        if (!del.includes(editingId)) del.push(editingId);
+        lsSet(LS.DELETED, del);
+      }
+    }
     const idx = list.findIndex(c => c.id === craft.id);
     if (idx >= 0) list[idx] = craft; else list.push(craft);
     lsSet(LS.LOCAL, list);
@@ -604,6 +651,7 @@ function initAddTab() {
   addIngredientRow(); addIngredientRow();
   applyMode(currentMode());
   updateOutput();
+  refreshCraftIdHint();
 }
 
 // === TAB: Manage crafts ===
@@ -754,8 +802,24 @@ function initItemsTab() {
     partsWrap.style.display = type === 'composite' ? '' : 'none';
   }
 
+  function autoItemId(name) { return slugify(name); }
+  function currentItemId() {
+    const manual = document.getElementById('item-id').value.trim();
+    if (manual) return slugify(manual);
+    const name = document.getElementById('item-name').value.trim();
+    return name ? autoItemId(name) : '';
+  }
+  function refreshItemIdHint() {
+    const hint = document.getElementById('item-id-hint');
+    const manual = document.getElementById('item-id').value.trim();
+    const id = currentItemId();
+    if (!id) { hint.textContent = ''; return; }
+    hint.textContent = manual ? `→ ${slugify(manual)}` : `auto → ${id}`;
+  }
+
   function resetItemForm() {
     document.getElementById('item-name').value = '';
+    document.getElementById('item-id').value = '';
     document.getElementById('item-image').value = '';
     partsContainer.innerHTML = '';
     addPartRow(); addPartRow();
@@ -765,6 +829,7 @@ function initItemsTab() {
     editingItemId = null;
     document.getElementById('item-edit-banner').style.display = 'none';
     document.getElementById('save-item').textContent = '💾 Ajouter l\'item';
+    refreshItemIdHint();
   }
 
   function buildItem() {
@@ -772,7 +837,8 @@ function initItemsTab() {
     if (!name) return null;
     const image = document.getElementById('item-image').value.trim() || null;
     const type = currentItemType();
-    const id = editingItemId || slugify(name);
+    const manual = document.getElementById('item-id').value.trim();
+    const id = manual ? slugify(manual) : (editingItemId || autoItemId(name));
     const item = { id, name, image, type };
     if (type === 'composite') {
       item.parts = Array.from(partsContainer.querySelectorAll('.ing-row')).map(row => ({
@@ -787,6 +853,7 @@ function initItemsTab() {
   window.startEditItem = (item) => {
     editingItemId = item.id;
     document.getElementById('item-name').value = item.name || '';
+    document.getElementById('item-id').value = item.id || '';
     document.getElementById('item-image').value = item.image || '';
     const radio = document.querySelector(`input[name="item-type"][value="${item.type || 'base'}"]`);
     if (radio) radio.checked = true;
@@ -803,6 +870,7 @@ function initItemsTab() {
     // Switch to the Items tab.
     document.querySelector('.tab[data-tab="items"]').click();
     document.getElementById('item-name').focus();
+    refreshItemIdHint();
   };
 
   document.querySelectorAll('input[name="item-type"]').forEach(r => {
@@ -811,6 +879,8 @@ function initItemsTab() {
   document.getElementById('add-item-part').onclick = () => addPartRow();
   document.getElementById('clear-item').onclick = resetItemForm;
   document.getElementById('item-cancel-edit').onclick = resetItemForm;
+  document.getElementById('item-name').addEventListener('input', refreshItemIdHint);
+  document.getElementById('item-id').addEventListener('input', refreshItemIdHint);
 
   document.getElementById('save-item').onclick = () => {
     const item = buildItem();
@@ -819,7 +889,9 @@ function initItemsTab() {
       showToast('Ajoute au moins un composant'); return;
     }
     const wasEditing = !!editingItemId;
-    const list = lsGet(LS.ITEMS, []);
+    const idChanged = wasEditing && item.id !== editingItemId;
+    let list = lsGet(LS.ITEMS, []);
+    if (idChanged) list = list.filter(x => x.id !== editingItemId);
     const idx = list.findIndex(x => x.id === item.id);
     if (idx >= 0) list[idx] = item; else list.push(item);
     lsSet(LS.ITEMS, list);
