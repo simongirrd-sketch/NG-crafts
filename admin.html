@@ -79,6 +79,33 @@
     padding:0.75rem 1rem; border-radius:var(--radius-sm); margin-bottom:1rem;
     color:#fbbf24; font-size:0.9rem;
   }
+  .img-drop-wrap { position: relative; }
+  .img-drop-hint {
+    margin-top: 0.4rem; padding: 0.75rem; border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm); text-align: center; color: var(--text-muted);
+    font-size: 0.85rem; cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .img-drop-hint:hover { border-color: var(--accent); color: var(--accent); }
+  .img-drop-wrap.drag-over .img-drop-hint {
+    border-color: var(--accent); background: var(--accent-glow); color: var(--accent);
+  }
+  .img-drop-preview-wrap {
+    display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;
+    padding: 0.5rem; background: var(--bg-elev); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .img-drop-preview-wrap.empty { display: none; }
+  .img-drop-preview {
+    width: 48px; height: 48px; object-fit: contain; background: #2a2a2a;
+    border: 1px solid var(--border); border-radius: 4px; image-rendering: pixelated;
+  }
+  .img-drop-clear {
+    background: transparent; border: 1px solid var(--border-strong); color: var(--red);
+    padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .img-drop-clear:hover { background: rgba(248,113,113,0.1); }
+  .img-drop-meta { flex: 1; font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); word-break: break-all; }
 </style>
 </head>
 <body>
@@ -336,13 +363,103 @@ function escapeHTML(s) {
 function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
 function slugify(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s\-_]/g, '').trim().replace(/\s+/g, '-');
+    .replace(/[^a-z0-9\s\-_:]/g, '').trim().replace(/\s+/g, '-');
 }
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// --- Image drop zone: wraps an existing text input so the user can either
+// type a filename, drag an image, or click to pick one. Dropped files are
+// stored inline as data URLs so the static site has nothing to upload.
+function enableImageDrop(inputEl) {
+  if (!inputEl || inputEl.dataset.dropEnabled) return;
+  inputEl.dataset.dropEnabled = '1';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'img-drop-wrap';
+  inputEl.parentNode.insertBefore(wrap, inputEl);
+  wrap.appendChild(inputEl);
+
+  const hint = document.createElement('div');
+  hint.className = 'img-drop-hint';
+  hint.textContent = '📁 Glisse une image ici ou clique pour en choisir une';
+  wrap.appendChild(hint);
+
+  const previewWrap = document.createElement('div');
+  previewWrap.className = 'img-drop-preview-wrap empty';
+  previewWrap.innerHTML = `
+    <img class="img-drop-preview" alt="preview" />
+    <div class="img-drop-meta"></div>
+    <button type="button" class="img-drop-clear">Retirer</button>
+  `;
+  wrap.appendChild(previewWrap);
+
+  const preview = previewWrap.querySelector('.img-drop-preview');
+  const meta = previewWrap.querySelector('.img-drop-meta');
+  const clearBtn = previewWrap.querySelector('.img-drop-clear');
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  wrap.appendChild(fileInput);
+
+  function updatePreview() {
+    const v = inputEl.value.trim();
+    if (!v) { previewWrap.classList.add('empty'); return; }
+    previewWrap.classList.remove('empty');
+    if (v.startsWith('data:') || /^https?:\/\//i.test(v) || v.startsWith('/')) {
+      preview.src = v;
+      meta.textContent = v.startsWith('data:')
+        ? `image intégrée (${Math.round(v.length / 1024)} Ko)`
+        : v;
+    } else {
+      preview.src = 'assets/icons/' + v;
+      meta.textContent = 'assets/icons/' + v;
+    }
+  }
+
+  function handleFile(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      showToast('Fichier image attendu'); return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      inputEl.value = reader.result;
+      inputEl.dispatchEvent(new Event('input'));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  hint.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) handleFile(f);
+    fileInput.value = '';
+  });
+  clearBtn.addEventListener('click', () => {
+    inputEl.value = '';
+    inputEl.dispatchEvent(new Event('input'));
+  });
+  inputEl.addEventListener('input', updatePreview);
+
+  ['dragover', 'dragenter'].forEach(evt =>
+    wrap.addEventListener(evt, e => { e.preventDefault(); wrap.classList.add('drag-over'); })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    wrap.addEventListener(evt, e => { e.preventDefault(); wrap.classList.remove('drag-over'); })
+  );
+  wrap.addEventListener('drop', e => {
+    e.preventDefault();
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+
+  updatePreview();
 }
 
 // --- Admin logic ---
@@ -650,6 +767,7 @@ function initAddTab() {
   buildGridEditor();
   addIngredientRow(); addIngredientRow();
   applyMode(currentMode());
+  enableImageDrop(document.getElementById('image'));
   updateOutput();
   refreshCraftIdHint();
 }
@@ -906,6 +1024,7 @@ function initItemsTab() {
 
   addPartRow(); addPartRow();
   applyItemType('base');
+  enableImageDrop(document.getElementById('item-image'));
 }
 
 function renderItems() {
